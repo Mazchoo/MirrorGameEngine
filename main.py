@@ -35,8 +35,7 @@ def update(app):
     app.player.camera.set_position_to_global()
 
     app.engine.useShader(1)
-    image = cv2.flip(app.capture.frame, 1)
-    app.overlay.setTexture(image)
+    app.overlay.setTexture(app.capture.frame)
 
 
 def main(mesh_name: str):
