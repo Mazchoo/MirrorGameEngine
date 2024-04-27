@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import torch
 
+from ComputerVision.CameraThread import VideoThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
@@ -72,9 +73,7 @@ def infer_on_image(net, img, height_size, cpu, track, smooth):
     num_keypoints = Pose.num_kpts
     previous_poses = []
 
-    s = perf_counter()
     heatmaps, pafs, scale, pad = infer_fast(net, img, height_size, stride, upsample_ratio, cpu)
-    print(np.round((perf_counter() - s) * 1000, 3), 'ms seconds taken')
 
     total_keypoints_num = 0
     all_keypoints_by_type = []
@@ -113,16 +112,49 @@ def infer_on_image(net, img, height_size, cpu, track, smooth):
             cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
                         cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
 
+    return img
+
 
 class CheckPointMobileNet:
-    def __init__(self):
+    def __init__(self, model_path=MODEL_PATH, cuda=LOAD_CUDA):
         self.net = PoseEstimationWithMobileNet()
-        checkpoint = torch.load(MODEL_PATH, map_location='cuda' if LOAD_CUDA else 'cpu')
+        self.load_cuda = cuda
+        checkpoint = torch.load(model_path, map_location='cuda' if cuda else 'cpu')
         load_state(self.net, checkpoint)
         self.net = self.net.eval()
 
         if LOAD_CUDA:
             self.net = self.net.cuda()
 
-    def __call__(self, image: np.ndarray):
-        infer_on_image(self.net, image, INPUT_SIZE, not LOAD_CUDA, TRACK_OBJECTS, SMOOTH_POSES)
+    def __call__(self, image: np.ndarray, height=INPUT_SIZE, tarack_objects=TRACK_OBJECTS, smooth_poses=SMOOTH_POSES):
+        return infer_on_image(self.net, image, height, not self.load_cuda, tarack_objects, smooth_poses)
+
+
+def main(Model):
+    model = Model()
+    capture = VideoThread().start()
+    cv2.namedWindow("Camera")
+
+    total_time = 0
+    total_measurements = 0
+    while True:
+        start = perf_counter()
+        pred_frame = model(capture.frame)
+        total_time += perf_counter() - start
+        total_measurements += 1
+
+        if total_measurements != 0:
+            avg_time_ms = np.round(1000 * total_time / total_measurements, 3)
+            avg_fps = 1000 / avg_time_ms
+            print(f'Avg time {total_time/total_measurements} fps {avg_fps}')
+
+        cv2.imshow("Camera", pred_frame)
+
+        k = cv2.waitKey(1)
+        if k % 256 == 27:
+            break
+
+    capture.stop()
+
+if __name__ == '__main__':
+    main(CheckPointMobileNet)
