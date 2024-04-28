@@ -77,7 +77,6 @@ def infer_on_image(net, img, height_size, cuda, track, smooth, stride, upsample_
 
     heatmaps, pafs, scale = infer_fast(net, img, height_size, stride, upsample_ratio, cuda, padder)
     pad = padder.padding
-    print(pad)
 
     total_keypoints_num = 0
     all_keypoints_by_type = []
