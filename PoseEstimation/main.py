@@ -19,12 +19,8 @@ SMOOTH_POSES = False
 TRACK_OBJECTS = False
 STRIDE = 8
 UPSAMPLE_RATIO = 4
-
-
-def normalize(img, img_mean, img_scale):
-    img = np.array(img, dtype=np.float32)
-    img = (img - img_mean) * img_scale
-    return img
+IMAGE_MEAN = (128, 128, 128)
+IMAGE_SCALE = 1/256
 
 
 def create_padder(image, stride, input_size):
@@ -44,18 +40,18 @@ def create_padder(image, stride, input_size):
     return Pad(pad)
 
 
-def infer_fast(net, img, net_input_height_size, stride, upsample_ratio, cuda, padder: Pad,
-               img_mean=np.array([128, 128, 128], np.float32), img_scale=np.float32(1/256)):
+def infer_fast(net, img, net_input_height_size, upsample_ratio, 
+               img_mean, img_mult, cuda, padder: Pad):
     height, _, _ = img.shape
     scale = net_input_height_size / height
 
     scaled_img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
-    scaled_img = normalize(scaled_img, img_mean, img_scale)
 
     tensor_img = torch.from_numpy(scaled_img)
     if cuda:
         tensor_img = tensor_img.cuda()
     tensor_img = tensor_img.permute(2, 0, 1).unsqueeze(0).float()
+    tensor_img = (tensor_img - img_mean) * img_mult
     padded_img = padder(tensor_img)
 
     stages_output = net(padded_img)
@@ -71,11 +67,12 @@ def infer_fast(net, img, net_input_height_size, stride, upsample_ratio, cuda, pa
     return heatmaps, pafs, scale
 
 
-def infer_on_image(net, img, height_size, cuda, track, smooth, stride, upsample_ratio, padder):
+def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsample_ratio, padder):
     num_keypoints = Pose.num_kpts
     previous_poses = []
 
-    heatmaps, pafs, scale = infer_fast(net, img, height_size, stride, upsample_ratio, cuda, padder)
+    heatmaps, pafs, scale = infer_fast(net, img, height_size, upsample_ratio, 
+                                       img_mean, img_mult, cuda, padder)
     pad = padder.padding
 
     total_keypoints_num = 0
@@ -100,10 +97,6 @@ def infer_on_image(net, img, height_size, cuda, track, smooth, stride, upsample_
         pose = Pose(pose_keypoints, pose_entries[n][18])
         current_poses.append(pose)
 
-    if track:
-        track_poses(previous_poses, current_poses, smooth=smooth)
-        previous_poses = current_poses
-
     for pose in current_poses:
         pose.draw(img)
 
@@ -111,9 +104,6 @@ def infer_on_image(net, img, height_size, cuda, track, smooth, stride, upsample_
     for pose in current_poses:
         cv2.rectangle(img, (pose.bbox[0], pose.bbox[1]),
                         (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]), (0, 255, 0))
-        if track:
-            cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
 
     return img
 
@@ -122,18 +112,26 @@ class CheckPointMobileNet:
     def __init__(self, image: np.ndarray, model_path=MODEL_PATH, cuda=LOAD_CUDA):
         self.net = PoseEstimationWithMobileNet()
         self.load_cuda = cuda
+
         checkpoint = torch.load(model_path, map_location='cuda' if cuda else 'cpu')
         load_state(self.net, checkpoint)
         self.net = self.net.eval()
+
+        self.image_mean = torch.FloatTensor(IMAGE_MEAN)
+        self.image_mean = self.image_mean.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+        self.image_scale = torch.FloatTensor([IMAGE_SCALE])
 
         self.padder = create_padder(image, STRIDE, INPUT_SIZE)
 
         if LOAD_CUDA:
             self.net = self.net.cuda()
+            self.image_mean = self.image_mean.cuda()
+            self.image_scale = self.image_scale.cuda()
 
-    def __call__(self, image: np.ndarray, input_height=INPUT_SIZE, track_objects=TRACK_OBJECTS, smooth_poses=SMOOTH_POSES):
-        return infer_on_image(self.net, image, input_height, self.load_cuda, track_objects,
-                              smooth_poses, STRIDE, UPSAMPLE_RATIO, self.padder)
+    def __call__(self, image: np.ndarray, input_height=INPUT_SIZE):
+        return infer_on_image(self.net, image, input_height, self.load_cuda,
+                              self.image_mean, self.image_scale,
+                              STRIDE, UPSAMPLE_RATIO, self.padder)
 
 
 def main(Model):
