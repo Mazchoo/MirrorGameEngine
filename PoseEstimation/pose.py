@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 from PoseEstimation.keypoints import BODY_PARTS_KPT_IDS, BODY_PARTS_PAF_IDS
-from PoseEstimation.one_euro_filter import OneEuroFilter
 
 
 class Pose:
@@ -24,7 +23,6 @@ class Pose:
         self.confidence = confidence
         self.bbox = Pose.get_bbox(self.keypoints)
         self.id = None
-        self.filters = [[OneEuroFilter(), OneEuroFilter()] for _ in range(Pose.num_kpts)]
 
     @staticmethod
     def get_bbox(keypoints):
