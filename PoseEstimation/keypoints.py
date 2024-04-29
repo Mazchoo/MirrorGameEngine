@@ -23,6 +23,7 @@ def extract_keypoints(heatmap, all_keypoints, total_keypoint_num):
                     (heatmap_center > heatmap_down)
     heatmap_peaks = heatmap_peaks[1:heatmap_center.shape[0]-1, 1:heatmap_center.shape[1]-1]
     keypoints = list(zip(np.nonzero(heatmap_peaks)[1], np.nonzero(heatmap_peaks)[0]))  # (w, h)
+    # ToDo Check if transfer to CPU can happen around here and can paralellize over key_point type
     keypoints = sorted(keypoints, key=itemgetter(0))
 
     suppressed = np.zeros(len(keypoints), np.uint8)
