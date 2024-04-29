@@ -9,7 +9,7 @@ from ComputerVision.CameraThread import VideoThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
-from PoseEstimation.pose import Pose, track_poses
+from PoseEstimation.pose import Pose
 from time import perf_counter
 
 MODEL_PATH = './PoseEstimation/models/checkpoint.pth'
@@ -69,7 +69,6 @@ def infer_fast(net, img, net_input_height_size, upsample_ratio,
 
 def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsample_ratio, padder):
     num_keypoints = Pose.num_kpts
-    previous_poses = []
 
     heatmaps, pafs, scale = infer_fast(net, img, height_size, upsample_ratio, 
                                        img_mean, img_mult, cuda, padder)
