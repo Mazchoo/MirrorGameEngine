@@ -1,10 +1,8 @@
-import math
 from time import perf_counter
 
 import cv2
 import numpy as np
 import torch
-from torchvision.transforms import Pad
 
 from ComputerVision.CameraThread import VideoThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
@@ -23,25 +21,8 @@ IMAGE_MEAN = (128, 128, 128)
 IMAGE_SCALE = 1/256
 
 
-def create_padder(image, stride, input_size):
-    scale = INPUT_SIZE / image.shape[0]
-    scaled_image = cv2.resize(image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
-    h, w, _ = scaled_image.shape
-    min_dims = [input_size, max(w, input_size)]
-    h = min(min_dims[0], h)
-    min_dims[0] = math.ceil(min_dims[0] / float(stride)) * stride
-    min_dims[1] = max(min_dims[1], w)
-    min_dims[1] = math.ceil(min_dims[1] / float(stride)) * stride
-    pad = []
-    pad.append(int(math.floor((min_dims[0] - h) / 2.0)))
-    pad.append(int(math.floor((min_dims[1] - w) / 2.0)))
-    pad.append(int(min_dims[0] - h - pad[0]))
-    pad.append(int(min_dims[1] - w - pad[1]))
-    return Pad(pad)
-
-
 def infer_fast(net, img, net_input_height_size, upsample_ratio, 
-               img_mean, img_mult, cuda, padder: Pad):
+               img_mean, img_mult, cuda):
     height, _, _ = img.shape
     scale = net_input_height_size / height
 
@@ -52,9 +33,8 @@ def infer_fast(net, img, net_input_height_size, upsample_ratio,
         tensor_img = tensor_img.cuda()
     tensor_img = tensor_img.permute(2, 0, 1).unsqueeze(0).float()
     tensor_img = (tensor_img - img_mean) * img_mult
-    padded_img = padder(tensor_img)
 
-    stages_output = net(padded_img)
+    stages_output = net(tensor_img)
 
     stage2_heatmaps = stages_output[-2]
     heatmaps = np.transpose(stage2_heatmaps.squeeze().cpu().data.numpy(), (1, 2, 0))
@@ -67,12 +47,11 @@ def infer_fast(net, img, net_input_height_size, upsample_ratio,
     return heatmaps, pafs, scale
 
 
-def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsample_ratio, padder):
+def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsample_ratio):
     num_keypoints = Pose.num_kpts
 
     heatmaps, pafs, scale = infer_fast(net, img, height_size, upsample_ratio, 
-                                       img_mean, img_mult, cuda, padder)
-    pad = padder.padding
+                                       img_mean, img_mult, cuda)
 
     total_keypoints_num = 0
     all_keypoints_by_type = []
@@ -81,8 +60,8 @@ def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsa
 
     pose_entries, all_keypoints = group_keypoints(all_keypoints_by_type, pafs)
     for kpt_id in range(all_keypoints.shape[0]):
-        all_keypoints[kpt_id, 0] = (all_keypoints[kpt_id, 0] * stride / upsample_ratio - pad[1]) / scale
-        all_keypoints[kpt_id, 1] = (all_keypoints[kpt_id, 1] * stride / upsample_ratio - pad[0]) / scale
+        all_keypoints[kpt_id, 0] = (all_keypoints[kpt_id, 0] * stride / upsample_ratio) / scale
+        all_keypoints[kpt_id, 1] = (all_keypoints[kpt_id, 1] * stride / upsample_ratio) / scale
 
     current_poses = []
     for n in range(len(pose_entries)):
@@ -120,8 +99,6 @@ class CheckPointMobileNet:
         self.image_mean = self.image_mean.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
         self.image_scale = torch.FloatTensor([IMAGE_SCALE])
 
-        self.padder = create_padder(image, STRIDE, INPUT_SIZE)
-
         if LOAD_CUDA:
             self.net = self.net.cuda()
             self.image_mean = self.image_mean.cuda()
@@ -130,7 +107,7 @@ class CheckPointMobileNet:
     def __call__(self, image: np.ndarray, input_height=INPUT_SIZE):
         return infer_on_image(self.net, image, input_height, self.load_cuda,
                               self.image_mean, self.image_scale,
-                              STRIDE, UPSAMPLE_RATIO, self.padder)
+                              STRIDE, UPSAMPLE_RATIO)
 
 
 def main(Model):
