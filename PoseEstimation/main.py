@@ -182,4 +182,4 @@ def main(network):
     capture.stop()
 
 if __name__ == '__main__':
-    main(OnnxModel(ONNX_PATH))
+    main(PytorchModel(MODEL_PATH))
