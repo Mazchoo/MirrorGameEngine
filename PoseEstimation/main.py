@@ -8,7 +8,7 @@ from ComputerVision.CameraThread import VideoThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
-from PoseEstimation.pose import Pose
+from PoseEstimation.pose import Pose, track_poses
 
 MODEL_PATH = './PoseEstimation/models/checkpoint.pth'
 INPUT_SIZE = 256
@@ -47,7 +47,8 @@ def infer_fast(net, img, net_input_height_size, upsample_ratio,
     return heatmaps, pafs, scale
 
 
-def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsample_ratio):
+def infer_on_image(net, img, height_size, cuda, img_mean, img_mult,
+                   stride, upsample_ratio, previous_poses):
     num_keypoints = Pose.num_kpts
 
     heatmaps, pafs, scale = infer_fast(net, img, height_size, upsample_ratio, 
@@ -75,6 +76,8 @@ def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsa
         pose = Pose(pose_keypoints, pose_entries[n][18])
         current_poses.append(pose)
 
+    track_poses(previous_poses, current_poses, smooth=True)
+
     for pose in current_poses:
         pose.draw(img)
 
@@ -83,11 +86,14 @@ def infer_on_image(net, img, height_size, cuda, img_mean, img_mult, stride, upsa
         cv2.rectangle(img, (pose.bbox[0], pose.bbox[1]),
                         (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]), (0, 255, 0))
 
-    return img
+        cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
+                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
+
+    return img, current_poses
 
 
 class CheckPointMobileNet:
-    def __init__(self, image: np.ndarray, model_path=MODEL_PATH, cuda=LOAD_CUDA):
+    def __init__(self, model_path=MODEL_PATH, cuda=LOAD_CUDA):
         self.net = PoseEstimationWithMobileNet()
         self.load_cuda = cuda
 
@@ -98,6 +104,7 @@ class CheckPointMobileNet:
         self.image_mean = torch.FloatTensor(IMAGE_MEAN)
         self.image_mean = self.image_mean.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
         self.image_scale = torch.FloatTensor([IMAGE_SCALE])
+        self.poses = []
 
         if LOAD_CUDA:
             self.net = self.net.cuda()
@@ -105,14 +112,15 @@ class CheckPointMobileNet:
             self.image_scale = self.image_scale.cuda()
 
     def __call__(self, image: np.ndarray, input_height=INPUT_SIZE):
-        return infer_on_image(self.net, image, input_height, self.load_cuda,
-                              self.image_mean, self.image_scale,
-                              STRIDE, UPSAMPLE_RATIO)
+        out_image, self.poses = infer_on_image(self.net, image, input_height, self.load_cuda,
+                                               self.image_mean, self.image_scale,
+                                               STRIDE, UPSAMPLE_RATIO, self.poses)
+        return out_image
 
 
 def main(Model):
     capture = VideoThread().start()
-    model = Model(capture.frame)
+    model = Model()
     cv2.namedWindow("Camera")
 
     total_time = 0
