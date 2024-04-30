@@ -1,4 +1,5 @@
 import math
+from time import perf_counter
 
 import cv2
 import numpy as np
@@ -10,7 +11,6 @@ from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
 from PoseEstimation.pose import Pose
-from time import perf_counter
 
 MODEL_PATH = './PoseEstimation/models/checkpoint.pth'
 INPUT_SIZE = 256
