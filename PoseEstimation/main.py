@@ -10,8 +10,12 @@ from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
 from PoseEstimation.pose import Pose, track_poses
 
+import onnxruntime as ort
+
 MODEL_PATH = './PoseEstimation/models/checkpoint.pth'
-INPUT_SIZE = 256
+ONNX_PATH = './PoseEstimation/models/onyx.onnx'
+INPUT_HEIGHT = 240
+INPUT_WIDTH = 320
 LOAD_CUDA = True
 SMOOTH_POSES = False
 TRACK_OBJECTS = False
@@ -21,12 +25,13 @@ IMAGE_MEAN = (128, 128, 128)
 IMAGE_SCALE = 1/256
 
 
-def infer_fast(net, img, net_input_height_size, upsample_ratio, 
+def infer_fast(net, img, net_target_y, net_target_x, upsample_ratio, 
                img_mean, img_mult, cuda):
-    height, _, _ = img.shape
-    scale = net_input_height_size / height
+    height, width, _ = img.shape
+    scale_x = net_target_x / width
+    scale_y = net_target_y / height
 
-    scaled_img = cv2.resize(img, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
+    scaled_img = cv2.resize(img, (0, 0), fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
 
     tensor_img = torch.from_numpy(scaled_img)
     if cuda:
@@ -37,21 +42,25 @@ def infer_fast(net, img, net_input_height_size, upsample_ratio,
     stages_output = net(tensor_img)
 
     stage2_heatmaps = stages_output[-2]
-    heatmaps = np.transpose(stage2_heatmaps.squeeze().cpu().data.numpy(), (1, 2, 0))
+    if not isinstance(stage2_heatmaps, np.ndarray):
+        stage2_heatmaps = stage2_heatmaps.cpu().data.numpy()
+    heatmaps = np.transpose(stage2_heatmaps.squeeze(), (1, 2, 0))
     heatmaps = cv2.resize(heatmaps, (0, 0), fx=upsample_ratio, fy=upsample_ratio, interpolation=cv2.INTER_CUBIC)
 
     stage2_pafs = stages_output[-1]
-    pafs = np.transpose(stage2_pafs.squeeze().cpu().data.numpy(), (1, 2, 0))
+    if not isinstance(stage2_pafs, np.ndarray):
+        stage2_pafs = stage2_pafs.cpu().data.numpy()
+    pafs = np.transpose(stage2_pafs.squeeze(), (1, 2, 0))
     pafs = cv2.resize(pafs, (0, 0), fx=upsample_ratio, fy=upsample_ratio, interpolation=cv2.INTER_CUBIC)
 
-    return heatmaps, pafs, scale
+    return heatmaps, pafs, scale_x, scale_y
 
 
-def infer_on_image(net, img, height_size, cuda, img_mean, img_mult,
+def infer_on_image(net, img, height, width, cuda, img_mean, img_mult,
                    stride, upsample_ratio, previous_poses):
     num_keypoints = Pose.num_kpts
 
-    heatmaps, pafs, scale = infer_fast(net, img, height_size, upsample_ratio, 
+    heatmaps, pafs, scale_x, scale_y = infer_fast(net, img, height, width, upsample_ratio, 
                                        img_mean, img_mult, cuda)
 
     total_keypoints_num = 0
@@ -61,8 +70,8 @@ def infer_on_image(net, img, height_size, cuda, img_mean, img_mult,
 
     pose_entries, all_keypoints = group_keypoints(all_keypoints_by_type, pafs)
     for kpt_id in range(all_keypoints.shape[0]):
-        all_keypoints[kpt_id, 0] = (all_keypoints[kpt_id, 0] * stride / upsample_ratio) / scale
-        all_keypoints[kpt_id, 1] = (all_keypoints[kpt_id, 1] * stride / upsample_ratio) / scale
+        all_keypoints[kpt_id, 0] = (all_keypoints[kpt_id, 0] * stride / upsample_ratio) / scale_x
+        all_keypoints[kpt_id, 1] = (all_keypoints[kpt_id, 1] * stride / upsample_ratio) / scale_y
 
     current_poses = []
     for n in range(len(pose_entries)):
@@ -92,35 +101,63 @@ def infer_on_image(net, img, height_size, cuda, img_mean, img_mult,
     return img, current_poses
 
 
-class CheckPointMobileNet:
-    def __init__(self, model_path=MODEL_PATH, cuda=LOAD_CUDA):
+class PytorchModel:
+    def __init__(self, path: str, cuda=True, **kwargs):
         self.net = PoseEstimationWithMobileNet()
         self.load_cuda = cuda
 
-        checkpoint = torch.load(model_path, map_location='cuda' if cuda else 'cpu')
+        checkpoint = torch.load(path, map_location='cuda' if self.load_cuda else 'cpu')
         load_state(self.net, checkpoint)
         self.net = self.net.eval()
+    
+        if self.load_cuda:
+            self.net = self.net.cuda()
+    
+    def __call__(self, inp: torch.Tensor):
+        return self.net(inp)
+
+
+class OnnxModel:
+    def __init__(self, path: str, **kwargs):
+        self.session = ort.InferenceSession(path)
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_names = [o.name for o in self.session.get_outputs()]
+        if 'CUDAExecutionProvider' in ort.get_available_providers():
+            self.session.set_providers(['CUDAExecutionProvider'])
+    
+    def __call__(self, inp: torch.Tensor):
+        np_input = inp.cpu().numpy()
+        outputs = self.session.run(
+            self.output_names,
+            {self.input_name: np_input}              
+        )
+        return outputs
+
+
+class CheckPointMobileNet:
+    def __init__(self, net, cuda=LOAD_CUDA):
+        self.net = net
+        self.load_cuda = cuda
 
         self.image_mean = torch.FloatTensor(IMAGE_MEAN)
         self.image_mean = self.image_mean.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
         self.image_scale = torch.FloatTensor([IMAGE_SCALE])
         self.poses = []
 
-        if LOAD_CUDA:
-            self.net = self.net.cuda()
+        if self.load_cuda:
             self.image_mean = self.image_mean.cuda()
             self.image_scale = self.image_scale.cuda()
 
-    def __call__(self, image: np.ndarray, input_height=INPUT_SIZE):
-        out_image, self.poses = infer_on_image(self.net, image, input_height, self.load_cuda,
+    def __call__(self, image: np.ndarray, height=INPUT_HEIGHT, width=INPUT_WIDTH):
+        out_image, self.poses = infer_on_image(self.net, image, height, width, self.load_cuda,
                                                self.image_mean, self.image_scale,
                                                STRIDE, UPSAMPLE_RATIO, self.poses)
         return out_image
 
 
-def main(Model):
+def main(network):
     capture = VideoThread().start()
-    model = Model()
+    model = CheckPointMobileNet(network)
     cv2.namedWindow("Camera")
 
     total_time = 0
@@ -145,4 +182,4 @@ def main(Model):
     capture.stop()
 
 if __name__ == '__main__':
-    main(CheckPointMobileNet)
+    main(OnnxModel(ONNX_PATH))
