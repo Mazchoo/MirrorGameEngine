@@ -12,6 +12,9 @@ from PoseEstimation.pose import Pose, track_poses
 
 import onnxruntime as ort
 
+print(f'Cuda enabled {torch.cuda.is_available()}')
+print(f'Cudnn enabled {torch.backends.cudnn.enabled}')
+
 MODEL_PATH = './PoseEstimation/models/checkpoint.pth'
 ONNX_PATH = './PoseEstimation/models/onyx.onnx'
 INPUT_HEIGHT = 240
@@ -119,11 +122,12 @@ class PytorchModel:
 
 class OnnxModel:
     def __init__(self, path: str, **kwargs):
-        self.session = ort.InferenceSession(path)
+        providers = [("CUDAExecutionProvider",
+                      {"device_id": torch.cuda.current_device()})]
+        sess_options = ort.SessionOptions()
+        self.session = ort.InferenceSession(path, sess_options=sess_options, providers=providers)
         self.input_name = self.session.get_inputs()[0].name
         self.output_names = [o.name for o in self.session.get_outputs()]
-        if 'CUDAExecutionProvider' in ort.get_available_providers():
-            self.session.set_providers(['CUDAExecutionProvider'])
     
     def __call__(self, inp: torch.Tensor):
         np_input = inp.cpu().numpy()
