@@ -11,6 +11,7 @@ from PoseEstimation.load_state import load_state
 from PoseEstimation.pose import Pose, track_poses
 
 import onnxruntime as ort
+import tensorrt as trt
 
 print(f'Cuda enabled {torch.cuda.is_available()}')
 print(f'Cudnn enabled {torch.backends.cudnn.enabled}')
@@ -48,12 +49,17 @@ def infer_fast(net, img, net_target_y, net_target_x, upsample_ratio,
     if not isinstance(stage2_heatmaps, np.ndarray):
         stage2_heatmaps = stage2_heatmaps.cpu().data.numpy()
     heatmaps = np.transpose(stage2_heatmaps.squeeze(), (1, 2, 0))
+    if heatmaps.dtype != np.float32:
+        heatmaps = np.float32(heatmaps)
+
     heatmaps = cv2.resize(heatmaps, (0, 0), fx=upsample_ratio, fy=upsample_ratio, interpolation=cv2.INTER_CUBIC)
 
     stage2_pafs = stages_output[-1]
     if not isinstance(stage2_pafs, np.ndarray):
         stage2_pafs = stage2_pafs.cpu().data.numpy()
     pafs = np.transpose(stage2_pafs.squeeze(), (1, 2, 0))
+    if pafs.dtype != np.float32:
+        pafs = np.float32(pafs)
     pafs = cv2.resize(pafs, (0, 0), fx=upsample_ratio, fy=upsample_ratio, interpolation=cv2.INTER_CUBIC)
 
     return heatmaps, pafs, scale_x, scale_y
@@ -108,6 +114,7 @@ class PytorchModel:
     def __init__(self, path: str, cuda=True, **kwargs):
         self.net = PoseEstimationWithMobileNet()
         self.load_cuda = cuda
+        self.half = False
 
         checkpoint = torch.load(path, map_location='cuda' if self.load_cuda else 'cpu')
         load_state(self.net, checkpoint)
@@ -115,12 +122,34 @@ class PytorchModel:
     
         if self.load_cuda:
             self.net = self.net.cuda()
-    
+            if kwargs.get("half"):
+                self.net = self.net.half()
+                self.half = True
+
     def __call__(self, inp: torch.Tensor):
+        inp = inp.half() if self.half else inp
         return self.net(inp)
 
 
 class OnnxModel:
+    def __init__(self, path: str, **kwargs):
+        providers = [("CUDAExecutionProvider",
+                      {"device_id": torch.cuda.current_device()})]
+        sess_options = ort.SessionOptions()
+        self.session = ort.InferenceSession(path, sess_options=sess_options, providers=providers)
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_names = [o.name for o in self.session.get_outputs()]
+    
+    def __call__(self, inp: torch.Tensor):
+        np_input = inp.cpu().numpy()
+        outputs = self.session.run(
+            self.output_names,
+            {self.input_name: np_input}              
+        )
+        return outputs
+
+
+class TensorRTModel:
     def __init__(self, path: str, **kwargs):
         providers = [("CUDAExecutionProvider",
                       {"device_id": torch.cuda.current_device()})]
