@@ -24,7 +24,7 @@ ONNX_PATH = './PoseEstimation/models/onyx.onnx'
 TRT_PATH = './PoseEstimation/models/turtwig.trt'
 INPUT_HEIGHT = 210
 INPUT_WIDTH = 280
-LOAD_CUDA = False
+LOAD_CUDA = True
 STRIDE = 8
 UPSAMPLE_RATIO = 2 * 16 / 7
 IMAGE_MEAN = (128, 128, 128)
@@ -32,18 +32,21 @@ IMAGE_SCALE = 1/256
 
 
 def infer_fast(net, img, net_target_y, net_target_x, upsample_ratio, 
-               img_mean, img_mult, cuda):
+               img_mean, img_mult, load_cuda):
     height, width, _ = img.shape
     scale_x = net_target_x / width
     scale_y = net_target_y / height
 
     scaled_img = cv2.resize(img, (0, 0), fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
 
-    tensor_img = torch.from_numpy(scaled_img)
-    if cuda:
+    if load_cuda:
+        tensor_img = torch.from_numpy(scaled_img)
         tensor_img = tensor_img.cuda()
-    tensor_img = tensor_img.permute(2, 0, 1).unsqueeze(0).float()
-    tensor_img = (tensor_img - img_mean) * img_mult
+        tensor_img = tensor_img.permute(2, 0, 1).unsqueeze(0).float()
+        tensor_img = (tensor_img - img_mean) * img_mult
+    else:
+        tensor_img = np.expand_dims(scaled_img.transpose([2, 0, 1]), 0).astype(np.float32)
+        tensor_img = (tensor_img - img_mean) * img_mult
 
     stages_output = net(tensor_img)
 
@@ -142,11 +145,10 @@ class OnnxModel:
         self.input_name = self.session.get_inputs()[0].name
         self.output_names = [o.name for o in self.session.get_outputs()]
     
-    def __call__(self, inp: torch.Tensor):
-        np_input = inp.cpu().numpy()
+    def __call__(self, inp: np.ndarray):
         outputs = self.session.run(
             self.output_names,
-            {self.input_name: np_input}              
+            {self.input_name: inp}              
         )
         return outputs
 
@@ -183,8 +185,7 @@ class TensorRTModel:
         self.success = None # Don't know yet if model run was successful
 
     def __call__(self, inp: torch.Tensor):
-        np_input = inp.cpu().numpy()
-        np.copyto(self.inputs[0]['host'], np_input)
+        np.copyto(self.inputs[0]['host'], inp)
         cuda.memcpy_htod_async(self.inputs[0]['device'], self.inputs[0]['host'], self.stream)
         self.success = self.context.execute_v2(self.bindings)
         cuda.memcpy_dtoh_async(self.outputs[2]['host'], self.outputs[2]['device'], self.stream)
@@ -196,15 +197,19 @@ class CheckPointMobileNet:
     def __init__(self, net, cuda=LOAD_CUDA):
         self.net = net
         self.load_cuda = cuda
-
-        self.image_mean = torch.FloatTensor(IMAGE_MEAN)
-        self.image_mean = self.image_mean.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-        self.image_scale = torch.FloatTensor([IMAGE_SCALE])
         self.poses = []
 
         if self.load_cuda:
+            self.image_mean = torch.FloatTensor(IMAGE_MEAN)
+            self.image_mean = self.image_mean.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+            self.image_scale = torch.FloatTensor([IMAGE_SCALE])
             self.image_mean = self.image_mean.cuda()
             self.image_scale = self.image_scale.cuda()
+        else:
+            self.image_mean = np.array(IMAGE_MEAN, dtype=np.float32)
+            self.image_mean = np.expand_dims(self.image_mean, 0)
+            self.image_mean = np.expand_dims(np.expand_dims(self.image_mean, -1), -1)
+            self.image_scale = IMAGE_SCALE
 
     def __call__(self, image: np.ndarray, height=INPUT_HEIGHT, width=INPUT_WIDTH):
         out_image, self.poses = infer_on_image(self.net, image, height, width, self.load_cuda,
@@ -240,4 +245,4 @@ def main(network):
     capture.stop()
 
 if __name__ == '__main__':
-    main(TensorRTModel(TRT_PATH))
+    main(PytorchModel(TORCH_PATH))
