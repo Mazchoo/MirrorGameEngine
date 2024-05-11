@@ -12,6 +12,23 @@ from Common.ReflectiveLight import ReflectiveLight
 from ComputerVision.ModelThread import ModelThread
 from Helpers.Globals import MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT
 
+''' 
+    TODO - Add option to turn drawing on and off in (test mode vs release mode)
+    TODO - Write pytorch image to the underlay when in release mode
+    TODO - Do some kind of segmentation based on grab cutting the body in Pytorch
+            + Draw the outline in testing mode
+            + Segment the pytorch image in release mode
+    TODO - Draw movement lines on the image based on smoothed tracking
+    TODO - Set the light location based on the most probably light location in the image
+    TODO - Support Drawing multiple objects
+    TODO - Add collision detection with mouse or limbs
+    TODO - Add gravity to some objects
+    TODO - Add collision momentum to some objects
+    TODO - Add explosion shader to some objects
+    TODO - Add movement schedule to objects
+    TODO - Add ability to scroll background image
+    TODO - Let objects scroll with the screen
+'''
 
 def setup3DObjectShader(_shader_id):
     glEnable(GL_BLEND)
