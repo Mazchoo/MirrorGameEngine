@@ -5,8 +5,8 @@ import collections
 
 INPUT_PATH = './PoseEstimation/models/checkpoint.pth'
 OUTPUT_PATH = './PoseEstimation/models/onyx.onnx'
-INPUT_HEIGHT = 240
-INPUT_WIDTH = 320
+INPUT_HEIGHT = 210
+INPUT_WIDTH = 280
 
 
 def load_state(net, checkpoint):

@@ -22,8 +22,8 @@ print(f'Cudnn enabled {torch.backends.cudnn.enabled}')
 TORCH_PATH = './PoseEstimation/models/checkpoint.pth'
 ONNX_PATH = './PoseEstimation/models/onyx.onnx'
 TRT_PATH = './PoseEstimation/models/turtwig.trt'
-INPUT_HEIGHT = 240
-INPUT_WIDTH = 320
+INPUT_HEIGHT = 210
+INPUT_WIDTH = 280
 LOAD_CUDA = False
 STRIDE = 8
 UPSAMPLE_RATIO = 4
