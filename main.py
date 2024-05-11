@@ -1,5 +1,3 @@
-import numpy as np
-import cv2
 
 from OpenGL.GL import glEnable, glBlendFunc, glUniform1i, glGetUniformLocation
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
@@ -11,7 +9,7 @@ from Common.Player import Player
 from Common.DynamicOverlay import DynamicOverlay
 from Common.PositionCamera import PositionCamera
 from Common.ReflectiveLight import ReflectiveLight
-from ComputerVision.CameraThread import VideoThread
+from ComputerVision.ModelThread import ModelThread
 from Helpers.Globals import MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT
 
 
@@ -40,7 +38,7 @@ def update(app):
 
 def main(mesh_name: str):
 
-    capture = VideoThread(0)
+    capture = ModelThread(0)
 
     shape_factory = lambda: ObjMtlMesh(
         mesh_name, motion_model, **MATERIAL_DEFAULT_GLOBAL_DICT

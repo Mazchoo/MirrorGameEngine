@@ -1,7 +1,9 @@
 from threading import Thread
 import cv2
 
-class VideoThread:
+from PoseEstimation.main import CheckPointMobileNet, PytorchModel, TORCH_PATH
+
+class ModelThread:
     """
     Class that continuously gets frames from a VideoCapture object
     with a dedicated thread.
@@ -11,6 +13,7 @@ class VideoThread:
         self.stream = cv2.VideoCapture(src)
         self.grabbed, self.frame = self.stream.read()
         self.stopped = False
+        self.model = CheckPointMobileNet(PytorchModel(TORCH_PATH))
 
     def start(self):
         Thread(target=self.get, args=()).start()
@@ -21,7 +24,9 @@ class VideoThread:
             if not self.grabbed:
                 self.stop()
             else:
-                self.grabbed, self.frame = self.stream.read()
+                self.grabbed, self.frame_raw = self.stream.read()
+                self.frame = self.model(self.frame_raw)
+                
 
     def stop(self):
         self.stopped = True
