@@ -19,7 +19,7 @@ class DynamicOverlay:
         self.material = DynamicMaterial()
 
     def setTexture(self, image: np.ndarray):
-        self.material.setTexture(image)
+        self.material.setTextureFromImage(image)
 
     def draw(self):
         self.material.use()
