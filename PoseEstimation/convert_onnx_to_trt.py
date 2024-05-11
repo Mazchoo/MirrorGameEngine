@@ -4,7 +4,7 @@ def build_engine(input_path: str, output_path: str):
     trt_logger = trt.Logger(trt.Logger.WARNING)
     builder = trt.Builder(trt_logger)
     # we have only one image in batch
-    network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+    network = builder.create_network()
 
     parser = trt.OnnxParser(network, trt_logger)
     with open(input_path, 'rb') as model:
@@ -23,4 +23,4 @@ def build_engine(input_path: str, output_path: str):
 
 
 if __name__ == '__main__':
-    build_engine('./PoseEstimation/models/onyx.onnx', './PoseEstimation/models/hare.trt')
+    build_engine('./PoseEstimation/models/onyx.onnx', './PoseEstimation/models/turtwig.trt')
