@@ -33,15 +33,10 @@ def convert_to_onnx(net, output_path):
                       input_names=input_names, output_names=output_names, export_params=True)
 
 
-def convert_to_dyanmo(net, output_path):
-    # ToDo
-    pass
-
-
 if __name__ == '__main__':
     net = PoseEstimationWithMobileNet()
     checkpoint = torch.load(INPUT_PATH)
     load_state(net, checkpoint)
     net = net.cuda()
 
-    convert_to_dyanmo(net, OUTPUT_PATH)
+    convert_to_onnx(net, OUTPUT_PATH)
