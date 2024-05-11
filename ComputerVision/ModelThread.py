@@ -1,7 +1,7 @@
 from threading import Thread
 import cv2
 
-from PoseEstimation.main import CheckPointMobileNet, PytorchModel, TORCH_PATH
+from PoseEstimation.run import CheckPointMobileNet, PytorchModel, TORCH_PATH
 
 class ModelThread:
     """

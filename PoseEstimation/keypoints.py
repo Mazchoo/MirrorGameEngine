@@ -1,6 +1,10 @@
 import math
+from numba.typed import List
+from numba.core import types
 import numpy as np
 from operator import itemgetter
+from numba import njit, typeof
+from time import perf_counter
 
 BODY_PARTS_KPT_IDS = [[1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9], [9, 10], [1, 11],
                       [11, 12], [12, 13], [1, 0], [0, 14], [14, 16], [0, 15], [15, 17], [2, 16], [5, 17]]
@@ -8,25 +12,24 @@ BODY_PARTS_PAF_IDS = ([12, 13], [20, 21], [14, 15], [16, 17], [22, 23], [24, 25]
                       [6, 7], [8, 9], [10, 11], [28, 29], [30, 31], [34, 35], [32, 33], [36, 37], [18, 19], [26, 27])
 
 
-def extract_keypoints(heatmap, all_keypoints, total_keypoint_num):
-    heatmap[heatmap < 0.1] = 0
-    heatmap_with_borders = np.pad(heatmap, [(2, 2), (2, 2)], mode='constant')
+@njit
+def get_heatmap_peaks(heatmap_with_borders: np.ndarray):
     heatmap_center = heatmap_with_borders[1:heatmap_with_borders.shape[0]-1, 1:heatmap_with_borders.shape[1]-1]
     heatmap_left = heatmap_with_borders[1:heatmap_with_borders.shape[0]-1, 2:heatmap_with_borders.shape[1]]
     heatmap_right = heatmap_with_borders[1:heatmap_with_borders.shape[0]-1, 0:heatmap_with_borders.shape[1]-2]
     heatmap_up = heatmap_with_borders[2:heatmap_with_borders.shape[0], 1:heatmap_with_borders.shape[1]-1]
     heatmap_down = heatmap_with_borders[0:heatmap_with_borders.shape[0]-2, 1:heatmap_with_borders.shape[1]-1]
 
-    heatmap_peaks = (heatmap_center > heatmap_left) &\
-                    (heatmap_center > heatmap_right) &\
-                    (heatmap_center > heatmap_up) &\
-                    (heatmap_center > heatmap_down)
-    heatmap_peaks = heatmap_peaks[1:heatmap_center.shape[0]-1, 1:heatmap_center.shape[1]-1]
-    keypoints = list(zip(np.nonzero(heatmap_peaks)[1], np.nonzero(heatmap_peaks)[0]))  # (w, h)
-    keypoints = sorted(keypoints, key=itemgetter(0))
+    heatmap_peaks = heatmap_center > heatmap_left
+    heatmap_peaks &= heatmap_center > heatmap_right
+    heatmap_peaks &= heatmap_center > heatmap_up
+    heatmap_peaks &= heatmap_center > heatmap_down
+    return heatmap_peaks[1:heatmap_center.shape[0]-1, 1:heatmap_center.shape[1]-1]
 
-    suppressed = np.zeros(len(keypoints), np.uint8)
-    keypoints_with_score_and_id = []
+
+def create_key_points_with_ids(keypoints, suppressed: np.ndarray, total_keypoint_num: types.int32, heatmap: np.ndarray):
+    # ToDo - Can probably be optimised but not much there
+    output = []
     keypoint_num = 0
     for i in range(len(keypoints)):
         if suppressed[i]:
@@ -37,8 +40,22 @@ def extract_keypoints(heatmap, all_keypoints, total_keypoint_num):
                 suppressed[j] = 1
         keypoint_with_score_and_id = (keypoints[i][0], keypoints[i][1], heatmap[keypoints[i][1], keypoints[i][0]],
                                       total_keypoint_num + keypoint_num)
-        keypoints_with_score_and_id.append(keypoint_with_score_and_id)
+        output.append(keypoint_with_score_and_id)
         keypoint_num += 1
+    return output, keypoint_num
+
+
+def extract_keypoints(heatmap, all_keypoints, total_keypoint_num):
+    heatmap[heatmap < 0.1] = 0
+    heatmap_with_borders = np.pad(heatmap, [(2, 2), (2, 2)], mode='constant')
+    heatmap_peaks = get_heatmap_peaks(heatmap_with_borders)
+    keypoints = list(zip(np.nonzero(heatmap_peaks)[1], np.nonzero(heatmap_peaks)[0]))  # (w, h)
+    keypoints = sorted(keypoints, key=itemgetter(0))
+
+    suppressed = np.zeros(len(keypoints), np.uint8)
+    keypoints_with_score_and_id, keypoint_num = create_key_points_with_ids(
+        keypoints, suppressed, total_keypoint_num, heatmap
+    )
     all_keypoints.append(keypoints_with_score_and_id)
     return keypoint_num
 

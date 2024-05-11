@@ -9,20 +9,13 @@ from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
 from PoseEstimation.pose import Pose, track_poses
+from PoseEstimation.model_params import (LOAD_CUDA, IMAGE_MEAN, IMAGE_SCALE,
+                                         INPUT_HEIGHT, INPUT_WIDTH, STRIDE,
+                                         UPSAMPLE_RATIO, TORCH_PATH)
+from Helpers.Globals import RELEASE_MODE
 
 print(f'Cuda enabled {torch.cuda.is_available()}')
 print(f'Cudnn enabled {torch.backends.cudnn.enabled}')
-
-TORCH_PATH = './PoseEstimation/models/checkpoint.pth'
-ONNX_PATH = './PoseEstimation/models/onyx.onnx'
-TRT_PATH = './PoseEstimation/models/turtwig.trt'
-INPUT_HEIGHT = 210
-INPUT_WIDTH = 280
-LOAD_CUDA = True
-STRIDE = 8
-UPSAMPLE_RATIO = 2 * 16 / 7
-IMAGE_MEAN = (128, 128, 128)
-IMAGE_SCALE = 1/256
 
 
 def infer_fast(net, img, net_target_y, net_target_x, upsample_ratio, 
@@ -95,16 +88,17 @@ def infer_on_image(net, img, height, width, cuda, img_mean, img_mult,
 
     track_poses(previous_poses, current_poses, smooth=True)
 
-    for pose in current_poses:
-        pose.draw(img)
+    if not RELEASE_MODE:
+        for pose in current_poses:
+            pose.draw(img)
 
-    img = cv2.addWeighted(img, 0.6, img, 0.4, 0)
-    for pose in current_poses:
-        cv2.rectangle(img, (pose.bbox[0], pose.bbox[1]),
-                        (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]), (0, 255, 0))
+        img = cv2.addWeighted(img, 0.6, img, 0.4, 0)
+        for pose in current_poses:
+            cv2.rectangle(img, (pose.bbox[0], pose.bbox[1]),
+                            (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]), (0, 255, 0))
 
-        cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
+            cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
+                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
 
     return img, current_poses
 
@@ -180,6 +174,7 @@ def main(network):
             break
 
     capture.stop()
+
 
 if __name__ == '__main__':
     main(PytorchModel(TORCH_PATH))
