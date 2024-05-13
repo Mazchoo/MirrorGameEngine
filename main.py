@@ -10,10 +10,9 @@ from Common.DynamicOverlay import DynamicOverlay
 from Common.PositionCamera import PositionCamera
 from Common.ReflectiveLight import ReflectiveLight
 from ComputerVision.ModelThread import ModelThread
-from Helpers.Globals import MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT
+from Helpers.Globals import MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT, SCREEN_SIZE
 
 ''' 
-    TODO - Add option to turn drawing on and off in (test mode vs release mode)
     TODO - Write pytorch image to the underlay when in release mode
     TODO - Do some kind of segmentation based on grab cutting the body in Pytorch
             + Draw the outline in testing mode
@@ -86,7 +85,7 @@ def main(mesh_name: str):
     app = GameLoop(shape_factory, shape_shader_args,
                    overlay_factory, overlay_shader_args,
                    player, light, 
-                   capture, limit_frame_rate=True, main_loop_command=update)
+                   capture, limit_frame_rate=True, main_loop_command=update, screen_size=SCREEN_SIZE)
     return app
 
 
