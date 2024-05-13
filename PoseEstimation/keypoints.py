@@ -1,10 +1,6 @@
 import math
-from numba.typed import List
-from numba.core import types
 import numpy as np
 from operator import itemgetter
-from numba import njit, typeof
-from time import perf_counter
 
 BODY_PARTS_KPT_IDS = [[1, 2], [1, 5], [2, 3], [3, 4], [5, 6], [6, 7], [1, 8], [8, 9], [9, 10], [1, 11],
                       [11, 12], [12, 13], [1, 0], [0, 14], [14, 16], [0, 15], [15, 17], [2, 16], [5, 17]]
@@ -12,7 +8,6 @@ BODY_PARTS_PAF_IDS = ([12, 13], [20, 21], [14, 15], [16, 17], [22, 23], [24, 25]
                       [6, 7], [8, 9], [10, 11], [28, 29], [30, 31], [34, 35], [32, 33], [36, 37], [18, 19], [26, 27])
 
 
-@njit
 def get_heatmap_peaks(heatmap_with_borders: np.ndarray):
     heatmap_center = heatmap_with_borders[1:heatmap_with_borders.shape[0]-1, 1:heatmap_with_borders.shape[1]-1]
     heatmap_left = heatmap_with_borders[1:heatmap_with_borders.shape[0]-1, 2:heatmap_with_borders.shape[1]]
@@ -27,7 +22,7 @@ def get_heatmap_peaks(heatmap_with_borders: np.ndarray):
     return heatmap_peaks[1:heatmap_center.shape[0]-1, 1:heatmap_center.shape[1]-1]
 
 
-def create_key_points_with_ids(keypoints, suppressed: np.ndarray, total_keypoint_num: types.int32, heatmap: np.ndarray):
+def create_key_points_with_ids(keypoints, suppressed: np.ndarray, total_keypoint_num: int, heatmap: np.ndarray):
     # ToDo - Can probably be optimised but not much there
     output = []
     keypoint_num = 0
@@ -36,7 +31,7 @@ def create_key_points_with_ids(keypoints, suppressed: np.ndarray, total_keypoint
             continue
         for j in range(i+1, len(keypoints)):
             if math.sqrt((keypoints[i][0] - keypoints[j][0]) ** 2 +
-                         (keypoints[i][1] - keypoints[j][1]) ** 2) < 6:
+                         (keypoints[i][1] - keypoints[j][1]) ** 2) < 12:
                 suppressed[j] = 1
         keypoint_with_score_and_id = (keypoints[i][0], keypoints[i][1], heatmap[keypoints[i][1], keypoints[i][0]],
                                       total_keypoint_num + keypoint_num)
