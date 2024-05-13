@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from typing import List
 
 from PoseEstimation.keypoints import BODY_PARTS_KPT_IDS, BODY_PARTS_PAF_IDS
 from PoseEstimation.one_euro_filter import OneEuroFilter
@@ -116,3 +117,19 @@ def track_poses(previous_poses, current_poses, threshold=2, smooth=False):
                 current_pose.keypoints[kpt_id, 0] = current_pose.filters[kpt_id][0](current_pose.keypoints[kpt_id, 0])
                 current_pose.keypoints[kpt_id, 1] = current_pose.filters[kpt_id][1](current_pose.keypoints[kpt_id, 1])
             current_pose.bbox = Pose.get_bbox(current_pose.keypoints)
+
+
+def filter_poses(previous_poses: List[Pose], poses: List[Pose]):
+    if not poses:
+        return previous_poses
+
+    max_confidence = max([p.confidence for p in poses])
+    pose_from_last = []
+    if previous_poses:
+        prev_id = previous_poses[0].id
+        pose_from_last = [p for p in poses if p.last_id == prev_id]
+
+    if pose_from_last and pose_from_last[0].confidence * 2 > max_confidence:
+        return pose_from_last
+    else:
+        return [p for p in poses if p.confidence == max_confidence]

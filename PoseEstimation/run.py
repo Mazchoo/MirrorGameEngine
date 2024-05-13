@@ -8,7 +8,7 @@ from ComputerVision.CameraThread import VideoThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
-from PoseEstimation.pose import Pose, track_poses
+from PoseEstimation.pose import Pose, track_poses, filter_poses
 from PoseEstimation.model_params import (IMAGE_MEAN, IMAGE_SCALE,
                                          INPUT_HEIGHT, INPUT_WIDTH, STRIDE,
                                          UPSAMPLE_RATIO, TORCH_PATH)
@@ -87,6 +87,7 @@ def infer_on_image(net, img, height, width, cuda, img_mean, img_mult,
         current_poses.append(pose)
 
     track_poses(previous_poses, current_poses, smooth=True)
+    current_poses = filter_poses(previous_poses, current_poses)
 
     if not RELEASE_MODE:
         for pose in current_poses:
