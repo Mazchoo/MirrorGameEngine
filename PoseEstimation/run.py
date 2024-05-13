@@ -9,7 +9,7 @@ from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
 from PoseEstimation.pose import Pose, track_poses
-from PoseEstimation.model_params import (LOAD_CUDA, IMAGE_MEAN, IMAGE_SCALE,
+from PoseEstimation.model_params import (IMAGE_MEAN, IMAGE_SCALE,
                                          INPUT_HEIGHT, INPUT_WIDTH, STRIDE,
                                          UPSAMPLE_RATIO, TORCH_PATH)
 from Helpers.Globals import RELEASE_MODE
@@ -125,9 +125,9 @@ class PytorchModel:
 
 
 class CheckPointMobileNet:
-    def __init__(self, net, cuda=LOAD_CUDA):
+    def __init__(self, net, load_cuda=True, **kwargs):
         self.net = net
-        self.load_cuda = cuda
+        self.load_cuda = load_cuda
         self.poses = []
 
         if self.load_cuda:
@@ -149,9 +149,9 @@ class CheckPointMobileNet:
         return out_image
 
 
-def main(network):
+def main(network, **kwargs):
     capture = VideoThread().start()
-    model = CheckPointMobileNet(network)
+    model = CheckPointMobileNet(network, **kwargs)
     cv2.namedWindow("Camera")
 
     total_time = 0
@@ -177,4 +177,4 @@ def main(network):
 
 
 if __name__ == '__main__':
-    main(PytorchModel(TORCH_PATH))
+    main(PytorchModel(TORCH_PATH), load_cuda=True)

@@ -14,12 +14,12 @@ import torch
 
 class DynamicMaterial:
 
-    __slots__ = 'texture', 'cuda_texture'
+    __slots__ = 'texture' # , 'cuda_texture'
 
     def __init__(self):
         self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, self.texture)
-        self.cuda_texture = RegisteredImage(self.texture, GL_TEXTURE_2D, graphics_map_flags.WRITE_DISCARD)
+        # self.cuda_texture = RegisteredImage(self.texture, GL_TEXTURE_2D, graphics_map_flags.WRITE_DISCARD)
 
         glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)

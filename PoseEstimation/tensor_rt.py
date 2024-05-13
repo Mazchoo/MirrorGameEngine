@@ -3,6 +3,9 @@ import tensorrt as trt
 import pycuda.driver as cuda
 import pycuda.autoinit # Does some initialisation
 
+from PoseEstimation.run import main
+from PoseEstimation.model_params import TRT_PATH
+
 
 class TensorRTModel:
     def __init__(self, path: str, **kwargs):
@@ -14,9 +17,6 @@ class TensorRTModel:
 
         self.inputs, self.outputs, self.bindings = [], [], []
         self.stream = cuda.Stream()
-
-        self.context = self.engine.create_execution_context()
-        self.context.set_optimization_profile_async(0, self.stream.handle)
 
         for binding in self.engine:
             shape = tuple(self.engine.get_tensor_shape(binding))
@@ -36,10 +36,17 @@ class TensorRTModel:
         self.success = None # Don't know yet if model run was successful
 
     def __call__(self, inp: np.ndarray):
-        np.copyto(self.inputs[0]['host'], inp)
-        cuda.memcpy_htod_async(self.inputs[0]['device'], self.inputs[0]['host'], self.stream)
-        self.success = self.context.execute_v2(self.bindings)
-        cuda.memcpy_dtoh_async(self.outputs[2]['host'], self.outputs[2]['device'], self.stream)
-        cuda.memcpy_dtoh_async(self.outputs[3]['host'], self.outputs[3]['device'], self.stream)
-        self.stream.synchronize()
+        cuda.Context.push(pycuda.autoinit.context)
+        with self.engine.create_execution_context() as context:
+            np.copyto(self.inputs[0]['host'], inp)
+            cuda.memcpy_htod_async(self.inputs[0]['device'], self.inputs[0]['host'], self.stream)
+            self.success = context.execute_v2(self.bindings)
+            cuda.memcpy_dtoh_async(self.outputs[2]['host'], self.outputs[2]['device'], self.stream)
+            cuda.memcpy_dtoh_async(self.outputs[3]['host'], self.outputs[3]['device'], self.stream)
+            self.stream.synchronize()
+        cuda.Context.pop()
         return self.outputs[2]['host'], self.outputs[3]['host']
+
+
+if __name__ == '__main__':
+    main(TensorRTModel(TRT_PATH), load_cuda=False)

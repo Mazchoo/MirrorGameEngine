@@ -1,7 +1,9 @@
 from threading import Thread
 import cv2
 
-from PoseEstimation.run import CheckPointMobileNet, PytorchModel, TORCH_PATH
+from PoseEstimation.run import CheckPointMobileNet
+from PoseEstimation.model_params import TRT_PATH
+from PoseEstimation.tensor_rt import TensorRTModel
 
 class ModelThread:
     """
@@ -13,7 +15,7 @@ class ModelThread:
         self.stream = cv2.VideoCapture(src)
         self.grabbed, self.frame = self.stream.read()
         self.stopped = False
-        self.model = CheckPointMobileNet(PytorchModel(TORCH_PATH))
+        self.model = CheckPointMobileNet(TensorRTModel(TRT_PATH), load_cuda=False)
 
     def start(self):
         Thread(target=self.get, args=()).start()
