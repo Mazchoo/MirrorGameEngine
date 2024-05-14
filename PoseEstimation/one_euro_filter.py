@@ -36,8 +36,8 @@ class OneEuroFilter:
             self.dx = 0
         else:
             self.dx = (x - self.x_previous) * self.freq
-        dx_smoothed = self.filter_dx(self.dx, get_alpha(self.freq, self.dcutoff))
-        cutoff = self.mincutoff + self.beta * abs(dx_smoothed)
+        self.dx = self.filter_dx(self.dx, get_alpha(self.freq, self.dcutoff))
+        cutoff = self.mincutoff + self.beta * abs(self.dx)
         x_filtered = self.filter_x(x, get_alpha(self.freq, cutoff))
         self.x_previous = x
         return x_filtered

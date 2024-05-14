@@ -89,17 +89,24 @@ def infer_on_image(net, img, height, width, cuda, img_mean, img_mult,
     track_poses(previous_poses, current_poses, smooth=True)
     current_poses = filter_poses(previous_poses, current_poses)
 
-    if not RELEASE_MODE:
-        for pose in current_poses:
-            pose.draw(img)
+    if current_poses:
+        current_poses[0].calculate_all_dx()
+
+    if not RELEASE_MODE and current_poses:
+        pose = current_poses[0]
+        pose.draw(img)
 
         img = cv2.addWeighted(img, 0.6, img, 0.4, 0)
-        for pose in current_poses:
-            cv2.rectangle(img, (pose.bbox[0], pose.bbox[1]),
-                            (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]), (0, 255, 0))
+        cv2.rectangle(img, (pose.bbox[0], pose.bbox[1]),
+                        (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]), (0, 255, 0))
 
-            cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
+        cv2.putText(img, 'id: {}'.format(pose.id), (pose.bbox[0], pose.bbox[1] - 16),
+                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255))
+
+        for i, kp in enumerate(pose.keypoints):
+            if kp[0] > 0:
+                velocity_point = tuple((kp + pose.velocities[i]).astype(np.int32))
+                cv2.arrowedLine(img, tuple(kp), velocity_point, (255, 0, 0), 2)  
 
     return img, current_poses
 

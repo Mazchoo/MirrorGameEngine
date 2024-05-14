@@ -26,6 +26,17 @@ class Pose:
         self.bbox = Pose.get_bbox(self.keypoints)
         self.id = None
         self.filters = [[OneEuroFilter(), OneEuroFilter()] for _ in range(Pose.num_kpts)]
+        self.velocities = np.zeros((Pose.num_kpts, 2), dtype=np.int32)
+
+    def calculate_all_dx(self):
+        for i, kp in enumerate(self.keypoints):
+            if kp[0] > 0:
+                filters = self.filters[i]
+                dx = np.clip(filters[0].dx / 30, -20, 20)
+                dy = np.clip(filters[1].dx / 30, -20, 20)
+                self.velocities[i] = [dx, dy]
+            else:
+                self.velocities[i] *= 0
 
     @staticmethod
     def get_bbox(keypoints):
