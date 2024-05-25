@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import torch
 
-from ComputerVision.CameraThread import VideoThread
+from ComputerVision.CameraThread import CameraThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
@@ -158,7 +158,7 @@ class CheckPointMobileNet:
 
 
 def main(network, **kwargs):
-    capture = VideoThread().start()
+    capture = CameraThread().start()
     model = CheckPointMobileNet(network, **kwargs)
     cv2.namedWindow("Camera")
 

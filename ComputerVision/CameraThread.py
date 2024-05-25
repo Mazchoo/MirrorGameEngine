@@ -1,7 +1,7 @@
 from threading import Thread
 import cv2
 
-class VideoThread:
+class CameraThread:
     """
     Class that continuously gets frames from a VideoCapture object
     with a dedicated thread.
