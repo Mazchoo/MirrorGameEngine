@@ -39,14 +39,18 @@ def parse_texture_coord(line, invert_negative):
 def parse_face(line):
     face = [[int(x) for x in f.split('/')] for f in line.split(' ')]
 
-    # ToDo - Support converting four faces into triangles
-    if len(face) == 4:
-        face = face[:3]
+    if len(face) not in [3, 4]:
+        raise ValueError(f'Face {line} is not a triangle or quad.')
 
-    if len(face) != 3:
-        raise ValueError(f'Face {line} is not a triangle.')
+    output = []
 
-    return face
+    if len(face) == 3:
+        output.append(face)
+    elif len(face) == 4:
+        output.append(face[:3])
+        output.append(face[2:] + [face[0]])
+
+    return output
 
 
 def convert_parsed_data_to_numpy(faces, vertices, textures, normals):
@@ -99,7 +103,7 @@ def parse_obj(file_path, invert_negative=True):
             elif flag == 'vn':
                 normals.append(parse_vertex(line_content))
             elif flag == 'f':
-                faces[current_texture].append(parse_face(line_content))
+                faces[current_texture].extend(parse_face(line_content))
 
     vertext_data, texture_data = convert_parsed_data_to_numpy(
         faces, vertices, textures, normals
