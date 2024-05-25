@@ -13,14 +13,13 @@ from ComputerVision.ModelThread import ModelThread
 from Helpers.Globals import MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT, SCREEN_SIZE
 
 '''
-    TODO - Set the light location based on the most probably light location in the image
     TODO - Support Drawing multiple objects
     TODO - Add collision detection with mouse or limbs
     TODO - Add gravity to some objects
     TODO - Add collision momentum to some objects
     TODO - Add explosion shader to some objects
     TODO - Add movement schedule to objects
-    TODO - Add ability to scroll background image
+    TODO - Set the light location based on the most probably light location in the image
     TODO - Let objects scroll with the screen
 '''
 
@@ -68,13 +67,13 @@ def main(mesh_name: str):
     )
     overlay_factory = lambda: DynamicOverlay()
 
-    motion_model = EulerMotion([0, -1, -5], [0, 0, 0], object_id="motion")
+    motion_model = EulerMotion([0, -1, -7], [0, 0, 0], object_id="motion")
     camera = PositionCamera(
         fovy=45, aspect=640 / 480, near=.1, far=10, position=(0, 0, 0),
         object_id="projection", position_glob_id="cameraPosition"
     )
     player = Player(camera, object_id="view")
-    light = ReflectiveLight([0, 2, -3], [1, 1, 1], 2., 1.0, 1.0, 8.0,
+    light = ReflectiveLight([0, 2, -6], [1, 1, 1], 2., 1.0, 1.0, 8.0,
                             **LIGHT_DEFAULT_GLOBAL_DICT)
 
     app = GameLoop(shape_factory, shape_shader_args,
@@ -85,4 +84,4 @@ def main(mesh_name: str):
 
 
 if __name__ == '__main__':
-    main('ObjFiles/Bulbasaur/Bulbasaur.obj')
+    main('ObjFiles/Balloon/balloon.obj')
