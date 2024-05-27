@@ -70,3 +70,7 @@ class EulerMotion:
 
     def bind_global_variable_names(self, shader: int):
         bind_globals_to_object(self, shader)
+
+    def transform_vertex(self, vertex: np.ndarray) -> np.ndarray:
+        result = vertex @ self._position_matrix
+        return result

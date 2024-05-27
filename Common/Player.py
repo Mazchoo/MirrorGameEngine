@@ -85,3 +85,8 @@ class Player:
     def bind_global_variable_names(self, shader):
         bind_globals_to_object(self, shader)
         self.camera.bind_global_variable_names(shader)
+
+    def transform_vertex(self, vertex: np.ndarray):
+        result = vertex @ self._view_matrix
+        return result
+

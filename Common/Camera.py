@@ -37,3 +37,7 @@ class Camera:
 
     def bind_global_variable_names(self, shader):
         bind_globals_to_object(self, shader)
+
+    def transform_vertex(self, vertex: np.ndarray):
+        result = vertex @ self.projection_matrix
+        return result
