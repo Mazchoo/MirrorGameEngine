@@ -12,8 +12,8 @@ from Common.MultiShaderGameEngine import MultiShaderGameEngine
 class GameLoop:
 
     def __init__(self, shape_factory, shape_args, overlay_factory, overlay_args, player, light,
-                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480),
-                 limit_frame_rate=True, main_loop_command=lambda x: x):
+                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), image_size=(640, 480),
+                 limit_frame_rate=True, main_loop_command=lambda x: x, draw3d=True):
 
         self.engine = MultiShaderGameEngine(screen_size, background_col)
         self.engine.addShader(*shape_args)
@@ -45,23 +45,14 @@ class GameLoop:
 
         self.screen_width, self.screen_height = screen_size
         self.center_screen = (self.screen_width // 2, self.screen_height // 2)
+        self.image_size = np.array(image_size, dtype=np.float32)
+        self.draw3d = draw3d
 
         self.capture.start()
         self.main_loop(main_loop_command)
 
     def handle_keys(self):
-        direction_modifier = get_directional_key_combination(pg.key.get_pressed())
-
-        if direction_modifier is not None:
-            delta_postion = [
-                self.frame_time * 0.0025 * np.sin(self.player.theta + direction_modifier),
-                0,
-                self.frame_time * 0.0025 * np.cos(self.player.theta + direction_modifier)
-            ]
-
-            self.player.increment_position(*delta_postion)
-            self.player.recalculate_player_view(position=True)
-            self.player.set_view_to_global()
+        pass
 
     def main_loop(self, loop_callback):
         running = True
@@ -83,7 +74,8 @@ class GameLoop:
             self.engine.useShader(0)
 
             self.handle_keys()
-            self.shape.draw()
+            if self.draw3d:
+                self.shape.draw()
 
             pg.display.flip()
 
@@ -105,6 +97,16 @@ class GameLoop:
             self.num_frames = 0
 
         self.num_frames += 1
+
+    def transform_vertex_to_screen(self, vertex: np.ndarray):
+        vertex = self.shape.motion.transform_vertex(vertex)
+        vertex = self.player.transform_vertex(vertex)
+        vertex = self.player.camera.transform_vertex(vertex)
+        vertex /= vertex[3]
+        vertex = vertex[:2] * -1
+        vertex = vertex * 0.5 + 0.5
+        vertex *= self.image_size
+        return vertex
 
     def quit(self):
         self.shape.destroy()

@@ -6,7 +6,7 @@ from OpenGL.GL import GL_TRIANGLES
 from Common.ShinyMaterial import ShinyMaterial
 from Common.EulerMotion import EulerMotion
 from Helpers.ReadObj import parse_obj
-from Helpers.VertexDataOperations import normalize_l1, get_bbox
+from Helpers.VertexDataOperations import normalize_l1, get_bbox, centroid_weighted_by_face
 from Helpers.MemoryUtil import generate_vertex_buffers, layout_position_texture_normal
 
 
@@ -19,11 +19,15 @@ class ObjMtlMesh:
 
         self.motion = motion
         vertices, self.texture_data, mtl_dict = parse_obj(file_path)
+        
         self.globals = kwargs
 
         normalize_l1(vertices[:, :3], normalize_scale)
-        self.centroid = vertices[:, :3].mean(axis=0)
+        self.centroid = centroid_weighted_by_face(vertices[:, :3])
+        vertices[:, :3] -= self.centroid
         self.bbox = get_bbox(vertices)
+        avg_z = self.bbox[:, 2].mean()
+        self.bbox[:, 2] = avg_z
 
         self.vao, self.vbo = generate_vertex_buffers(vertices)
         layout_position_texture_normal()

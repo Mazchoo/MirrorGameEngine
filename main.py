@@ -12,17 +12,19 @@ from Common.DynamicOverlay import DynamicOverlay
 from Common.PositionCamera import PositionCamera
 from Common.ReflectiveLight import ReflectiveLight
 from ComputerVision.ModelThread import ModelThread
-from Helpers.Globals import MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT, SCREEN_SIZE, IMAGE_SIZE, RELEASE_MODE
+from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT,
+                             SCREEN_SIZE, IMAGE_SIZE, RELEASE_MODE)
 
 '''
+    TODO - Find volume of objects and add a density variable
+    TODO - Add gravity, drag term and terminal velocity property
     TODO - Support Drawing multiple objects
     TODO - Add collision detection with mouse or limbs
-    TODO - Add gravity to some objects
     TODO - Add collision momentum to some objects
     TODO - Add explosion shader to some objects
     TODO - Add movement schedule to objects
     TODO - Set the light location based on the most probably light location in the image
-    TODO - Let objects scroll with the screen
+    TODO - The player view matrix is not needed
 '''
 
 def setup3DObjectShader(_shader_id):
@@ -50,35 +52,23 @@ def update(app):
 
     if not RELEASE_MODE:
         v_min, v_max = app.shape.bbox
-        v_min = v_min.copy()
-        v_max = v_max.copy()
-        avg_z = (v_min[2] + v_max[2]) / 2
-        v_min[2] = avg_z
-        v_max[2] = avg_z
-        v_min = app.shape.motion.transform_vertex(v_min)
-        v_max = app.shape.motion.transform_vertex(v_max)
-        v_min = app.player.transform_vertex(v_min)
-        v_max = app.player.transform_vertex(v_max)
-        v_min = app.player.camera.transform_vertex(v_min)
-        v_max = app.player.camera.transform_vertex(v_max)
-        v_min /= v_min[2]
-        v_max /= v_max[2]
-        v_min = v_min[:2]
-        v_max = v_max[:2]
-        v_min[1] *= -1
-        v_max[1] *= -1
-        v_min = v_min * 0.5 + 0.5
-        v_max = v_max * 0.5 + 0.5
-        v_min *= IMAGE_SIZE_NP
-        v_max *= IMAGE_SIZE_NP
+        v_min = app.transform_vertex_to_screen(v_min)
+        v_max = app.transform_vertex_to_screen(v_max)
+        cog = app.transform_vertex_to_screen(np.array([0, 0, 0, 1], dtype=np.float32))
 
         bbox = np.vstack([v_min, v_max])
         new_v_min = bbox.min(axis=0) - (1, 1)
         new_v_max = bbox.max(axis=0) + (1, 1)
+        vertex_list = np.vstack([
+            [new_v_min, [new_v_min[0], new_v_max[1]], new_v_max, [new_v_max[0], new_v_min[1]]]
+        ])
 
-        v_min_tuple = tuple(new_v_min.astype(np.int32))
-        v_max_tuple = tuple(new_v_max.astype(np.int32))
-        cv2.rectangle(frame, v_min_tuple, v_max_tuple, (0, 0, 255))
+        rot = app.shape.motion.angles[1]
+        rot_mat = np.array([[np.cos(rot), -np.sin(rot)], [np.sin(rot), np.cos(rot)]], dtype=np.float32)
+        vertex_list = (vertex_list - cog) @ rot_mat + cog
+
+        cv2.polylines(frame, [vertex_list.astype(np.int32)], True, (0, 0, 255))
+        cv2.circle(frame, cog.astype(np.int32), radius=2, color=(255, 0, 0), thickness=1)
 
     app.overlay.setTexture(frame)
 
@@ -86,7 +76,7 @@ def main(mesh_name: str):
 
     capture = ModelThread(0)
 
-    motion_model = EulerMotion([0, 1, -4], [0, 0, 0], object_id="motion")
+    motion_model = EulerMotion([1, 0, -4], [0, 1, 0], object_id="motion")
     shape_factory = lambda: ObjMtlMesh(
         mesh_name, motion_model, **MATERIAL_DEFAULT_GLOBAL_DICT, normalize_scale=0.5
     )
@@ -113,9 +103,9 @@ def main(mesh_name: str):
                             **LIGHT_DEFAULT_GLOBAL_DICT)
 
     app = GameLoop(shape_factory, shape_shader_args,
-                   overlay_factory, overlay_shader_args,
-                   player, light, 
-                   capture, limit_frame_rate=True, main_loop_command=update, screen_size=SCREEN_SIZE)
+                   overlay_factory, overlay_shader_args, player, light, 
+                   capture, limit_frame_rate=True,
+                   main_loop_command=update, screen_size=SCREEN_SIZE, draw3d=True)
     return app
 
 
