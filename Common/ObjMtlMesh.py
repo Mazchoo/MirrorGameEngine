@@ -6,16 +6,17 @@ from OpenGL.GL import GL_TRIANGLES
 from Common.ShinyMaterial import ShinyMaterial
 from Common.EulerMotion import EulerMotion
 from Helpers.ReadObj import parse_obj
-from Helpers.VertexDataOperations import normalize_l1, get_bbox, centroid_weighted_by_face
+from Helpers.VertexDataOperations import (normalize_l1, get_bbox_2d,
+                                          centroid_weighted_by_face, convex_volume)
 from Helpers.MemoryUtil import generate_vertex_buffers, layout_position_texture_normal
 
 
 class ObjMtlMesh:
 
     __slots__ = 'centroid', 'bbox', 'vao', 'vbo', 'texture_data', 'materials', \
-                'draw_iterator', 'motion', 'globals'
+                'draw_iterator', 'motion', 'globals', 'volume'
 
-    def __init__(self, file_path: str, motion: EulerMotion, normalize_scale=2, **kwargs):
+    def __init__(self, file_path: str, motion: EulerMotion, normalize_scale: float, **kwargs):
 
         self.motion = motion
         vertices, self.texture_data, mtl_dict = parse_obj(file_path)
@@ -25,9 +26,9 @@ class ObjMtlMesh:
         normalize_l1(vertices[:, :3], normalize_scale)
         self.centroid = centroid_weighted_by_face(vertices[:, :3])
         vertices[:, :3] -= self.centroid
-        self.bbox = get_bbox(vertices)
-        avg_z = self.bbox[:, 2].mean()
-        self.bbox[:, 2] = avg_z
+        self.volume = convex_volume(vertices[:, :3])
+
+        self.bbox = get_bbox_2d(vertices[:, :3])
 
         self.vao, self.vbo = generate_vertex_buffers(vertices)
         layout_position_texture_normal()
@@ -47,6 +48,9 @@ class ObjMtlMesh:
 
         self.materials = tuple(self.materials)
         self.draw_iterator = tuple(self.draw_iterator)
+
+    def update(self):
+        pass
 
     def draw(self):
         glBindVertexArray(self.vao)

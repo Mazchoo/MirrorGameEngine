@@ -22,12 +22,12 @@ class EulerMotion:
 
         if len(position) != 3:
             raise ValueError(f"Expecting thee cordinates for position, found {len(position)}")
-        self.position = position
+        self.position = np.array(position, dtype=np.float32)
 
         self._angle_matrix = np.identity(4, dtype=np.float32)
         self._position_matrix = np.identity(4, dtype=np.float32)
 
-        self.recalculate_motion_matrix(self.position, self.angles)
+        self.recalculate_motion_matrix(True, True)
 
     def increment_angles(self, xy=None, yz=None, xz=None):
         if yz:

@@ -5,7 +5,6 @@ from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
                        GL_CULL_FACE)
 import numpy as np
 
-from Helpers.KeyUtil import get_directional_key_combination
 from Common.MultiShaderGameEngine import MultiShaderGameEngine
 
 

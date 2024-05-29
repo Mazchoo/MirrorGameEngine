@@ -4,7 +4,7 @@ from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_AL
 import cv2
 import numpy as np
 
-from Common.ObjMtlMesh import ObjMtlMesh
+from Objects.Balloon import Balloon
 from App.GameLoop import GameLoop
 from Common.EulerMotion import EulerMotion
 from Common.Player import Player
@@ -17,7 +17,6 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
 
 '''
     TODO - Find volume of objects and add a density variable
-    TODO - Add gravity, drag term and terminal velocity property
     TODO - Support Drawing multiple objects
     TODO - Add collision detection with mouse or limbs
     TODO - Add collision momentum to some objects
@@ -44,8 +43,7 @@ IMAGE_SIZE_NP = np.array(IMAGE_SIZE, dtype=np.float32)
 
 def update(app):
     app.engine.useShader(0)
-    app.player.camera.position = app.player.position
-    app.player.camera.set_position_to_global()
+    app.shape.update()
 
     app.engine.useShader(1)
     frame = app.capture.frame
@@ -76,9 +74,9 @@ def main(mesh_name: str):
 
     capture = ModelThread(0)
 
-    motion_model = EulerMotion([1, 0, -4], [0, 1, 0], object_id="motion")
-    shape_factory = lambda: ObjMtlMesh(
-        mesh_name, motion_model, **MATERIAL_DEFAULT_GLOBAL_DICT, normalize_scale=0.5
+    motion_model = EulerMotion([0, 1, -4], [0, 2, 0], object_id="motion")
+    shape_factory = lambda: Balloon(
+        mesh_name, motion_model, 0.5, 2, **MATERIAL_DEFAULT_GLOBAL_DICT,
     )
 
     shape_shader_args = (

@@ -14,10 +14,13 @@ def normalize_l2(vertices: np.ndarray, factor=2):
     vertices /= max_norm
 
 
-def get_bbox(vertices: np.ndarray):
+def get_bbox_2d(vertices: np.ndarray):
     v_mins = np.concatenate([vertices[:, :3].min(axis=0), [1]])
     v_maxs = np.concatenate([vertices[:, :3].max(axis=0), [1]])
-    return np.vstack([v_mins, v_maxs])
+    bbox = np.vstack([v_mins, v_maxs])
+    avg_z = bbox[:, 2].mean()
+    bbox[:, 2] = avg_z
+    return bbox
 
 
 def centroid_weighted_by_face(vertices: np.ndarray):
@@ -32,3 +35,18 @@ def centroid_weighted_by_face(vertices: np.ndarray):
     ac = a - c
     area = np.linalg.norm(np.cross(ab, ac), axis=1)
     return (avg_vertex * np.expand_dims(area, -1)).sum(axis=0) / area.sum()
+
+
+def convex_volume(vertices: np.ndarray):
+    ''' Assumes centroid is at (0, 0, 0) '''
+    if len(vertices) < 3 or len(vertices) % 3 != 0:
+        raise ValueError("Calculating centroid of array without faces")
+
+    a = vertices[::3]
+    b = vertices[1::3]
+    c = vertices[2::3]
+    concat_vertices = np.hstack([a, b, c])
+    concat_vertices = concat_vertices.reshape(len(vertices) // 3, 3, 3)
+    determinants = np.linalg.det(concat_vertices)
+    return determinants.sum() / 6
+
