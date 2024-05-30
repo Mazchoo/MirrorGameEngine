@@ -16,12 +16,16 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
                              SCREEN_SIZE, IMAGE_SIZE, RELEASE_MODE)
 
 '''
-    TODO - Find volume of objects and add a density variable
+    TODO - Add despawn criteria
     TODO - Support Drawing multiple objects
+    TODO - Add randomisation to the factory producing objects
     TODO - Add collision detection with mouse or limbs
     TODO - Add collision momentum to some objects
-    TODO - Add explosion shader to some objects
-    TODO - Add movement schedule to objects
+    TODO - Make balloons bounce off walls
+    TODO - Make balloons bounce off each other
+    TODO - Add tilting to balloons
+    TODO - Add compression shader to some objects
+    TODO - Add spawn schedule to objects
     TODO - Set the light location based on the most probably light location in the image
     TODO - The player view matrix is not needed
 '''
@@ -65,6 +69,7 @@ def update(app):
         rot_mat = np.array([[np.cos(rot), -np.sin(rot)], [np.sin(rot), np.cos(rot)]], dtype=np.float32)
         vertex_list = (vertex_list - cog) @ rot_mat + cog
 
+        frame = frame.copy() # Use local copy of frame
         cv2.polylines(frame, [vertex_list.astype(np.int32)], True, (0, 0, 255))
         cv2.circle(frame, cog.astype(np.int32), radius=2, color=(255, 0, 0), thickness=1)
 
@@ -74,9 +79,9 @@ def main(mesh_name: str):
 
     capture = ModelThread(0)
 
-    motion_model = EulerMotion([0, 1, -4], [0, 2, 0], object_id="motion")
+    motion_model = EulerMotion([1, 1, -4], [0, 0, 0], object_id="motion")
     shape_factory = lambda: Balloon(
-        mesh_name, motion_model, 0.5, 2, **MATERIAL_DEFAULT_GLOBAL_DICT,
+        mesh_name, motion_model, 0.5, 2., 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
     )
 
     shape_shader_args = (
