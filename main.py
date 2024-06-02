@@ -19,8 +19,6 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
     TODO - Add despawn criteria
     TODO - Support Drawing multiple objects
     TODO - Add randomisation to the factory producing objects
-    TODO - Add collision detection with mouse or limbs
-    TODO - Add collision momentum to some objects
     TODO - Make balloons bounce off walls
     TODO - Make balloons bounce off each other
     TODO - Add tilting to balloons
@@ -46,32 +44,20 @@ def setupOverlayShader(shader_id):
 IMAGE_SIZE_NP = np.array(IMAGE_SIZE, dtype=np.float32)
 
 def update(app):
-    app.engine.useShader(0)
-    app.shape.update()
-
     app.engine.useShader(1)
+    app.shape.update()
+    app.shape.update_bbox_and_centroid(app.player)
     frame = app.capture.frame
 
     if not RELEASE_MODE:
-        v_min, v_max = app.shape.bbox
-        v_min = app.transform_vertex_to_screen(v_min)
-        v_max = app.transform_vertex_to_screen(v_max)
-        cog = app.transform_vertex_to_screen(np.array([0, 0, 0, 1], dtype=np.float32))
-
-        bbox = np.vstack([v_min, v_max])
-        new_v_min = bbox.min(axis=0) - (1, 1)
-        new_v_max = bbox.max(axis=0) + (1, 1)
-        vertex_list = np.vstack([
-            [new_v_min, [new_v_min[0], new_v_max[1]], new_v_max, [new_v_max[0], new_v_min[1]]]
-        ])
-
-        rot = app.shape.motion.angles[1]
-        rot_mat = np.array([[np.cos(rot), -np.sin(rot)], [np.sin(rot), np.cos(rot)]], dtype=np.float32)
-        vertex_list = (vertex_list - cog) @ rot_mat + cog
+        cog = app.shape.screen_centroid
+        bbox = app.shape.screen_bbox
 
         frame = frame.copy() # Use local copy of frame
-        cv2.polylines(frame, [vertex_list.astype(np.int32)], True, (0, 0, 255))
-        cv2.circle(frame, cog.astype(np.int32), radius=2, color=(255, 0, 0), thickness=1)
+        cv2.polylines(frame, [bbox], True, (0, 0, 255))
+        cv2.circle(frame, cog, radius=2, color=(255, 0, 0), thickness=1)
+
+    app.shape.check_collision(app.capture.pose_dict)
 
     app.overlay.setTexture(frame)
 
@@ -79,9 +65,9 @@ def main(mesh_name: str):
 
     capture = ModelThread(0)
 
-    motion_model = EulerMotion([1, 1, -4], [0, 0, 0], object_id="motion")
+    motion_model = EulerMotion([1, 2, -4], [0, 0, 0], object_id="motion")
     shape_factory = lambda: Balloon(
-        mesh_name, motion_model, 0.5, 2., 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
+        mesh_name, motion_model, 0.5, 0.1, 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
     )
 
     shape_shader_args = (
@@ -102,7 +88,7 @@ def main(mesh_name: str):
         object_id="projection", position_glob_id="cameraPosition"
     )
     player = Player(camera, object_id="view")
-    light = ReflectiveLight([0, 0, -3], [1, 1, 1], 2., 1.0, 1.0, 8.0,
+    light = ReflectiveLight([0, 1, -3], [1, 1, 1], 2., 1.0, 1.0, 8.0,
                             **LIGHT_DEFAULT_GLOBAL_DICT)
 
     app = GameLoop(shape_factory, shape_shader_args,

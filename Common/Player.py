@@ -88,5 +88,5 @@ class Player:
 
     def transform_vertex(self, vertex: np.ndarray):
         result = vertex @ self._view_matrix
-        return result
+        return self.camera.transform_vertex(result)
 

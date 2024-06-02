@@ -16,7 +16,7 @@ class ModelThread:
         self.grabbed, self.frame = self.stream.read()
         self.stopped = False
         self.model = CheckPointMobileNet(TensorRTModel(TRT_PATH), load_cuda=False)
-        self.poses = []
+        self.pose_dict = {}
 
     def start(self):
         Thread(target=self.get, args=()).start()
@@ -29,8 +29,12 @@ class ModelThread:
             else:
                 self.grabbed, self.frame_raw = self.stream.read()
                 self.frame = self.model(self.frame_raw)
-                self.poses = self.model.poses
-                
+
+                poses = self.model.poses
+                if poses:
+                    self.pose_dict = poses[0].get_pose_dict()
+                else:
+                    self.pose_dict = {}
 
     def stop(self):
         self.stopped = True

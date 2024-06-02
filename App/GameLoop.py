@@ -11,7 +11,7 @@ from Common.MultiShaderGameEngine import MultiShaderGameEngine
 class GameLoop:
 
     def __init__(self, shape_factory, shape_args, overlay_factory, overlay_args, player, light,
-                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), image_size=(640, 480),
+                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480),
                  limit_frame_rate=True, main_loop_command=lambda x: x, draw3d=True):
 
         self.engine = MultiShaderGameEngine(screen_size, background_col)
@@ -44,7 +44,6 @@ class GameLoop:
 
         self.screen_width, self.screen_height = screen_size
         self.center_screen = (self.screen_width // 2, self.screen_height // 2)
-        self.image_size = np.array(image_size, dtype=np.float32)
         self.draw3d = draw3d
 
         self.capture.start()
@@ -96,16 +95,6 @@ class GameLoop:
             self.num_frames = 0
 
         self.num_frames += 1
-
-    def transform_vertex_to_screen(self, vertex: np.ndarray):
-        vertex = self.shape.motion.transform_vertex(vertex)
-        vertex = self.player.transform_vertex(vertex)
-        vertex = self.player.camera.transform_vertex(vertex)
-        vertex /= vertex[3]
-        vertex = vertex[:2] * -1
-        vertex = vertex * 0.5 + 0.5
-        vertex *= self.image_size
-        return vertex
 
     def quit(self):
         self.shape.destroy()
