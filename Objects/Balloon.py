@@ -4,17 +4,17 @@ import numpy as np
 from Common.ObjMtlMesh import ObjMtlMesh
 from Common.EulerMotion import EulerMotion
 from PoseEstimation.pose import Pose
-from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE
+from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL
 
 class Balloon(ObjMtlMesh):
 
-    __slots__ = 'drag', 'velocity', 'density', 'responsive', 'running', 'response_count'
+    __slots__ = 'terminal_velocity', 'velocity', 'density', 'responsive', 'running', 'response_count'
 
     def __init__(self, file_path: str, motion: EulerMotion, normalize_scale: float,
                  drag: float, density: float, **kwargs):
         super().__init__(file_path, motion, normalize_scale, **kwargs)
 
-        self.drag = drag
+        self.terminal_velocity = drag
         self.velocity = np.array([0, 0, 0], dtype=np.float32)
         self.density = density
         self.responsive = True
@@ -32,14 +32,17 @@ class Balloon(ObjMtlMesh):
 
         self.velocity[1] -= GRAVITY_CONSTANT
         velocity_sq = (self.velocity * self.velocity).sum()
-        if velocity_sq > self.drag:
-            self.velocity *= self.drag / velocity_sq
+        if velocity_sq > self.terminal_velocity:
+            self.velocity *= self.terminal_velocity / velocity_sq
 
-        if self.screen_bbox[2][0] > IMAGE_SIZE[1] and self.velocity[0] < 0:
+        if self.screen_bbox[2][0] > IMAGE_SIZE[0] and self.velocity[0] < 0:
             self.velocity[0] *= -1
 
         if self.screen_bbox[0][0] < 0 and self.velocity[0] > 0:
             self.velocity[0] *= -1
+
+        if self.screen_bbox[0][1] < CEILING_LEVEL and self.velocity[1] > 0:
+            self.velocity[1] *= -0.5
 
         self.motion.position += self.velocity
         self.motion.recalculate_motion_matrix(position=True)
@@ -49,14 +52,15 @@ class Balloon(ObjMtlMesh):
             return
 
         mass = self.density * self.volume
-        body_part_mass = 0.5 #  ToDo - trying varying this
+        body_part_mass = 2 #  ToDo - trying varying this
         min_x, min_y = self.screen_bbox[0]
         max_x, max_y = self.screen_bbox[2]
 
-        for body_part_data in pose.values():
+        for key, body_part_data in pose.items():
             x, y = body_part_data['position']
-            if x > min_x and x > max_x and y > min_y and y < max_y:
+            if x > min_x and x < max_x and y > min_y and y < max_y:
                 collision_v = -1 * body_part_data['velocity']
+                collision_v[1] = max(collision_v[1], 0)
 
                 if np.linalg.norm(collision_v) < 1e-7:
                     continue
@@ -65,7 +69,7 @@ class Balloon(ObjMtlMesh):
                 velocity /= (mass + body_part_mass)
                 self.velocity[:2] = velocity
 
-                self.response_count = 30
+                self.response_count = 10
                 self.responsive = False
                 break
 
