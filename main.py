@@ -67,7 +67,7 @@ def main(mesh_name: str):
 
     motion_model = EulerMotion([1, 2, -4], [0, 0, 0], object_id="motion")
     shape_factory = lambda: Balloon(
-        mesh_name, motion_model, 0.5, 0.1, 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
+        mesh_name, motion_model, 0.5, 0.075, 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
     )
 
     shape_shader_args = (
