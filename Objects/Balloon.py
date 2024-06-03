@@ -35,6 +35,12 @@ class Balloon(ObjMtlMesh):
         if velocity_sq > self.drag:
             self.velocity *= self.drag / velocity_sq
 
+        if self.screen_bbox[2][0] > IMAGE_SIZE[1] and self.velocity[0] < 0:
+            self.velocity[0] *= -1
+
+        if self.screen_bbox[0][0] < 0 and self.velocity[0] > 0:
+            self.velocity[0] *= -1
+
         self.motion.position += self.velocity
         self.motion.recalculate_motion_matrix(position=True)
 

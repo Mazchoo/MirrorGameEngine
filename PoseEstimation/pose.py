@@ -38,6 +38,16 @@ class Pose:
             else:
                 self.velocities[i] *= 0
 
+    def get_pose_dict(self):
+        output = {}
+        for i, key in enumerate(self.kpt_names):
+            key_point = self.keypoints[i]
+            if key_point[0] >= 0:
+                output[key] = {
+                    'position': key_point.copy(), 'velocity': self.velocities[i].copy()
+                }
+        return output
+
     @staticmethod
     def get_bbox(keypoints):
         found_keypoints = np.zeros((np.count_nonzero(keypoints[:, 0] != -1), 2), dtype=np.int32)
