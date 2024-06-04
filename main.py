@@ -13,19 +13,15 @@ from Common.PositionCamera import PositionCamera
 from Common.ReflectiveLight import ReflectiveLight
 from ComputerVision.ModelThread import ModelThread
 from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT,
-                             SCREEN_SIZE, IMAGE_SIZE, RELEASE_MODE)
+                             SCREEN_SIZE, RELEASE_MODE)
 
 '''
-    TODO - Add despawn criteria
     TODO - Support Drawing multiple objects
     TODO - Add randomisation to the factory producing objects
-    TODO - Make balloons bounce off walls
     TODO - Make balloons bounce off each other
     TODO - Add tilting to balloons
     TODO - Add compression shader to some objects
     TODO - Add spawn schedule to objects
-    TODO - Set the light location based on the most probably light location in the image
-    TODO - The player view matrix is not needed
 '''
 
 def setup3DObjectShader(_shader_id):
@@ -41,7 +37,6 @@ def setupOverlayShader(shader_id):
     # Set a global variable in the shader
     glUniform1i(glGetUniformLocation(shader_id, "imageTexture"), 0)
 
-IMAGE_SIZE_NP = np.array(IMAGE_SIZE, dtype=np.float32)
 
 def update(app):
     app.engine.useShader(1)
@@ -60,6 +55,7 @@ def update(app):
     app.shape.check_collision(app.capture.pose_dict)
 
     app.overlay.setTexture(frame)
+
 
 def main(mesh_name: str):
 
@@ -88,7 +84,7 @@ def main(mesh_name: str):
         object_id="projection", position_glob_id="cameraPosition"
     )
     player = Player(camera, object_id="view")
-    light = ReflectiveLight([0, 1, -3], [1, 1, 1], 2., 1.0, 1.0, 8.0,
+    light = ReflectiveLight([0, 2, -3], [1, 1, 1], 2., 1.0, 1.0, 8.0,
                             **LIGHT_DEFAULT_GLOBAL_DICT)
 
     app = GameLoop(shape_factory, shape_shader_args,

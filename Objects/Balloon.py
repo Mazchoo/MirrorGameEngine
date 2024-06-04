@@ -4,11 +4,12 @@ import numpy as np
 from Common.ObjMtlMesh import ObjMtlMesh
 from Common.EulerMotion import EulerMotion
 from PoseEstimation.pose import Pose
-from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL
+from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL, DESPAWN_LEVEL
 
 class Balloon(ObjMtlMesh):
 
-    __slots__ = 'terminal_velocity', 'velocity', 'density', 'responsive', 'running', 'response_count'
+    __slots__ = 'terminal_velocity', 'velocity', 'density', 'responsive',\
+                'running', 'response_count', 'despawn'
 
     def __init__(self, file_path: str, motion: EulerMotion, normalize_scale: float,
                  drag: float, density: float, **kwargs):
@@ -20,15 +21,20 @@ class Balloon(ObjMtlMesh):
         self.responsive = True
         self.running = True
         self.response_count = 0
+        self.despawn = False
 
     def update(self):
+        if DESPAWN_LEVEL + IMAGE_SIZE[1] > self.screen_centroid[1]:
+            self.running = False
+            self.despawn = True
+
+        if not self.running:
+            return
+
         if not self.responsive:
             self.response_count -= 1
             if self.response_count < 0:
                 self.responsive = True
-
-        if not self.running:
-            return
 
         self.velocity[1] -= GRAVITY_CONSTANT
         velocity_sq = (self.velocity * self.velocity).sum()
