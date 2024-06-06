@@ -3,7 +3,6 @@ import pygame as pg
 from OpenGL.GL import (glClear, glDisable, glEnable)
 from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
                        GL_CULL_FACE)
-import numpy as np
 
 from Common.MultiShaderGameEngine import MultiShaderGameEngine
 
@@ -11,7 +10,7 @@ from Common.MultiShaderGameEngine import MultiShaderGameEngine
 class GameLoop:
 
     def __init__(self, shape_factory, shape_args, overlay_factory, overlay_args, player, light,
-                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480),
+                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), nr_shapes=10,
                  limit_frame_rate=True, main_loop_command=lambda x: x, draw3d=True):
 
         self.engine = MultiShaderGameEngine(screen_size, background_col)
@@ -22,11 +21,11 @@ class GameLoop:
 
         with self.engine(0) as shape_shader_id:
             self.light = light
-            self.shape = shape_factory()
+            self.shapes = [shape_factory() for _ in range(nr_shapes)]
             self.player = player
 
             self.light.bind_global_variable_names(shape_shader_id)
-            self.shape.bind_global_variable_names(shape_shader_id)
+            for s in self.shapes: s.bind_global_variable_names(shape_shader_id) 
             self.player.bind_global_variable_names(shape_shader_id)
 
         with self.engine(1):
@@ -73,7 +72,7 @@ class GameLoop:
 
             self.handle_keys()
             if self.draw3d:
-                self.shape.draw()
+                for s in self.shapes: s.draw()
 
             pg.display.flip()
 
@@ -97,7 +96,7 @@ class GameLoop:
         self.num_frames += 1
 
     def quit(self):
-        self.shape.destroy()
+        for s in self.shapes: s.destroy()
         self.engine.destroy()
         self.overlay.destroy()
         self.capture.stop()

@@ -16,7 +16,6 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
                              SCREEN_SIZE, RELEASE_MODE)
 
 '''
-    TODO - Support Drawing multiple objects
     TODO - Add randomisation to the factory producing objects
     TODO - Make balloons bounce off each other
     TODO - Add tilting to balloons
@@ -40,19 +39,22 @@ def setupOverlayShader(shader_id):
 
 def update(app):
     app.engine.useShader(1)
-    app.shape.update()
-    app.shape.update_bbox_and_centroid(app.player)
+    for s in app.shapes:
+        s.update()
+        s.update_bbox_and_centroid(app.player)
     frame = app.capture.frame
 
     if not RELEASE_MODE:
-        cog = app.shape.screen_centroid
-        bbox = app.shape.screen_bbox
+        for s in app.shapes:
+            cog = s.screen_centroid
+            bbox = s.screen_bbox
 
-        frame = frame.copy() # Use local copy of frame
-        cv2.polylines(frame, [bbox], True, (0, 0, 255))
-        cv2.circle(frame, cog, radius=2, color=(255, 0, 0), thickness=1)
+            frame = frame.copy() # Use local copy of frame
+            cv2.polylines(frame, [bbox], True, (0, 0, 255))
+            cv2.circle(frame, cog, radius=2, color=(255, 0, 0), thickness=1)
 
-    app.shape.check_collision(app.capture.pose_dict)
+    for s in app.shapes:
+        s.check_collision(app.capture.pose_dict)
 
     app.overlay.setTexture(frame)
 
@@ -61,9 +63,9 @@ def main(mesh_name: str):
 
     capture = ModelThread(0)
 
-    motion_model = EulerMotion([1, 2, -4], [0, 0, 0], object_id="motion")
     shape_factory = lambda: Balloon(
-        mesh_name, motion_model, 0.5, 0.075, 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
+        mesh_name, EulerMotion([np.random.random() * 2 - 1, 2, -4], [0, 0, 0], object_id="motion"),
+        0.5, 0.075, 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
     )
 
     shape_shader_args = (
@@ -89,8 +91,8 @@ def main(mesh_name: str):
 
     app = GameLoop(shape_factory, shape_shader_args,
                    overlay_factory, overlay_shader_args, player, light, 
-                   capture, limit_frame_rate=True,
-                   main_loop_command=update, screen_size=SCREEN_SIZE, draw3d=True)
+                   capture, limit_frame_rate=True, main_loop_command=update,
+                   screen_size=SCREEN_SIZE, nr_shapes=3, draw3d=True)
     return app
 
 

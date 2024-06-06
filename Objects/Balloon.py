@@ -24,7 +24,7 @@ class Balloon(ObjMtlMesh):
         self.despawn = False
 
     def update(self):
-        if DESPAWN_LEVEL + IMAGE_SIZE[1] > self.screen_centroid[1]:
+        if self.screen_centroid[1] > DESPAWN_LEVEL + IMAGE_SIZE[1]:
             self.running = False
             self.despawn = True
 
@@ -52,6 +52,11 @@ class Balloon(ObjMtlMesh):
 
         self.motion.position += self.velocity
         self.motion.recalculate_motion_matrix(position=True)
+
+    def draw(self):
+        if self.despawn or not self.running:
+            return
+        super().draw()
 
     def check_collision(self, pose: dict):
         if not self.responsive:
