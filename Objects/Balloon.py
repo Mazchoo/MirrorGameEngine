@@ -77,7 +77,7 @@ class Balloon(ObjMtlMesh):
             return
         super().draw()
 
-    def check_collision(self, pose: dict) -> bool:
+    def check_player_collision(self, pose: dict) -> bool:
         if not self.responsive:
             return False
 

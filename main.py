@@ -16,7 +16,7 @@ def update(app):
         frame = draw_balloon_bounding_boxes(app.balloons, frame)
 
     for balloon in app.balloons:
-        balloon.check_collision(app.capture.pose_dict)
+        balloon.check_player_collision(app.capture.pose_dict)
 
     for i in range(len(app.balloons) - 1):
         balloon.check_balloon_collision(app.balloons[i:])
