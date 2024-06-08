@@ -1,7 +1,6 @@
 
 from OpenGL.GL import glEnable, glBlendFunc, glUniform1i, glGetUniformLocation
 from OpenGL.GL import GL_BLEND, GL_DEPTH_TEST, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
-import cv2
 import numpy as np
 
 from Objects.Balloon import Balloon
@@ -14,10 +13,8 @@ from Common.ReflectiveLight import ReflectiveLight
 from ComputerVision.ModelThread import ModelThread
 from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_DICT,
                              SCREEN_SIZE, RELEASE_MODE)
+from Helpers.ImageUtil import draw_balloon_bounding_boxes
 
-'''
-    TODO - Add sound effects
-'''
 
 def setup3DObjectShader(_shader_id):
     glEnable(GL_BLEND)
@@ -35,25 +32,26 @@ def setupOverlayShader(shader_id):
 
 def update(app):
     app.engine.useShader(1)
+
     for balloon in app.balloons:
         balloon.update()
         balloon.update_bbox_and_centroid(app.player)
+
     frame = app.capture.frame
-
     if not RELEASE_MODE and frame is not None:
-        for balloon in app.balloons:
-            cog = balloon.screen_centroid
-            bbox = balloon.screen_bbox
-
-            frame = frame.copy() # Use local copy of frame
-            cv2.polylines(frame, [bbox], True, (0, 0, 255))
-            cv2.circle(frame, cog, radius=2, color=(255, 0, 0), thickness=1)
+        frame = draw_balloon_bounding_boxes(app.balloons, frame)
 
     for balloon in app.balloons:
         balloon.check_collision(app.capture.pose_dict)
 
     for i in range(len(app.balloons) - 1):
         balloon.check_balloon_collision(app.balloons[i:])
+
+    for balloon in app.balloons:
+        if balloon.despawn:
+            app.sound_player.play_sound('balloon-pop.wav')
+            balloon.respawn()
+            balloon.update_bbox_and_centroid(app.player)
 
     if frame is not None:
         app.overlay.setTexture(frame)
@@ -104,7 +102,7 @@ def main(mesh_name: str):
     app = GameLoop(shape_factory, shape_shader_args,
                    overlay_factory, overlay_shader_args, player, light, 
                    capture, limit_frame_rate=True, main_loop_command=update,
-                   screen_size=SCREEN_SIZE, nr_shapes=3, draw3d=True)
+                   screen_size=SCREEN_SIZE, nr_balloons=3, draw3d=True)
     return app
 
 

@@ -6,12 +6,13 @@ from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
                        GL_CULL_FACE)
 
 from Common.MultiShaderGameEngine import MultiShaderGameEngine
+from Helpers.SoundPlayer import SoundPlayer
 
 
-def create_all_shapes(shape_factory: Callable, nr_shapes: int) -> list:
+def create_all_balloons(shape_factory: Callable, n: int) -> list:
     balloons = []
     total_spawn_time = 0
-    for _ in range(nr_shapes):
+    for _ in range(n):
         balloon = shape_factory()
         total_spawn_time += balloon.spawn_time
         balloon.spawn_count = total_spawn_time
@@ -21,7 +22,7 @@ def create_all_shapes(shape_factory: Callable, nr_shapes: int) -> list:
 class GameLoop:
 
     def __init__(self, shape_factory, shape_args, overlay_factory, overlay_args, player, light,
-                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), nr_shapes=10,
+                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), nr_balloons=10,
                  limit_frame_rate=True, main_loop_command=lambda x: x, draw3d=True):
 
         self.engine = MultiShaderGameEngine(screen_size, background_col)
@@ -30,9 +31,11 @@ class GameLoop:
 
         self.capture = capture
 
+        self.sound_player = SoundPlayer()
+
         with self.engine(0) as shape_shader_id:
             self.light = light
-            self.balloons = create_all_shapes(shape_factory, nr_shapes)
+            self.balloons = create_all_balloons(shape_factory, nr_balloons)
             self.player = player
 
             self.light.bind_global_variable_names(shape_shader_id)
@@ -60,9 +63,6 @@ class GameLoop:
         self.capture.start()
         self.main_loop(main_loop_command)
 
-    def handle_keys(self):
-        pass
-
     def main_loop(self, loop_callback):
         running = True
         while running:
@@ -82,9 +82,9 @@ class GameLoop:
 
             self.engine.useShader(0)
 
-            self.handle_keys()
             if self.draw3d:
-                for s in self.balloons: s.draw()
+                for balloon in self.balloons:
+                    balloon.draw()
 
             pg.display.flip()
 

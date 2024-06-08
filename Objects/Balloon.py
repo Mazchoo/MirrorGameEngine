@@ -25,8 +25,8 @@ class Balloon(ObjMtlMesh):
         self.running = False
         self.response_count = 0
         self.despawn = False
-        self.initial_position = copy(self.motion.position)
-        self.initial_angles = copy(self.motion.angles)
+        self.initial_position = self.motion.position.copy()
+        self.initial_angles = self.motion.angles.copy()
         self.spawn_time = spawn_time
         self.spawn_count = spawn_time
 
@@ -123,6 +123,9 @@ class Balloon(ObjMtlMesh):
         max_x, max_y = balloon.screen_bbox[2]
 
         for other in balloons[1:]:
+            if other.responsive:
+                continue
+
             other_mass = other.density * other.volume
             other_min_x, other_min_y = other.screen_bbox[0]
             other_max_x, other_max_y = other.screen_bbox[2]
@@ -135,6 +138,7 @@ class Balloon(ObjMtlMesh):
 
             speed = (mass * balloon.velocity[0] + other_mass * other.velocity[0])
             speed /= (mass + other_mass)
+            speed = max(speed, 0.01)
 
             if balloon.screen_centroid[0] < other.screen_centroid[0]:
                 balloon.velocity[0] = speed
@@ -152,8 +156,13 @@ class Balloon(ObjMtlMesh):
         return False
 
     def respawn(self):
-        self.motion.position = self.initial_position
-        self.motion.angles = self.initial_angles
+        self.motion.position = self.initial_position.copy()
+        self.motion.angles = self.initial_angles.copy()
+        self.motion.recalculate_motion_matrix(position=True, angles=True)
+
         self.velocity = np.array([0, 0, 0], dtype=np.float32)
+        self.angular_velocity = np.array([0, 0, 0], dtype=np.float32)
+
         self.spawn_count = self.spawn_time
-        self.despawn = True 
+        self.despawn = False
+        self.running = False
