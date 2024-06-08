@@ -16,7 +16,7 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
                              SCREEN_SIZE, RELEASE_MODE)
 
 '''
-    TODO - Add compression shader to some objects
+    TODO - Add sound effects
 '''
 
 def setup3DObjectShader(_shader_id):
