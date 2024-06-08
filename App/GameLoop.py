@@ -1,3 +1,4 @@
+from typing import Callable
 
 import pygame as pg
 from OpenGL.GL import (glClear, glDisable, glEnable)
@@ -6,6 +7,16 @@ from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
 
 from Common.MultiShaderGameEngine import MultiShaderGameEngine
 
+
+def create_all_shapes(shape_factory: Callable, nr_shapes: int):
+    shapes = []
+    total_spawn_time = 0
+    for _ in range(nr_shapes):
+        balloon = shape_factory()
+        total_spawn_time += balloon.spawn_time
+        balloon.spawn_count = total_spawn_time
+        shapes.append(balloon)
+    return shapes
 
 class GameLoop:
 
@@ -21,11 +32,12 @@ class GameLoop:
 
         with self.engine(0) as shape_shader_id:
             self.light = light
-            self.shapes = [shape_factory() for _ in range(nr_shapes)]
+            self.shapes = create_all_shapes(shape_factory, nr_shapes)
             self.player = player
 
             self.light.bind_global_variable_names(shape_shader_id)
-            for s in self.shapes: s.bind_global_variable_names(shape_shader_id) 
+            for s in self.shapes:
+                s.bind_global_variable_names(shape_shader_id) 
             self.player.bind_global_variable_names(shape_shader_id)
 
         with self.engine(1):

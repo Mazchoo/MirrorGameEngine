@@ -20,7 +20,6 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
     TODO - Make balloons bounce off each other
     TODO - Add tilting to balloons
     TODO - Add compression shader to some objects
-    TODO - Add spawn schedule to objects
 '''
 
 def setup3DObjectShader(_shader_id):
@@ -44,7 +43,7 @@ def update(app):
         s.update_bbox_and_centroid(app.player)
     frame = app.capture.frame
 
-    if not RELEASE_MODE:
+    if not RELEASE_MODE and frame is not None:
         for s in app.shapes:
             cog = s.screen_centroid
             bbox = s.screen_bbox
@@ -56,17 +55,22 @@ def update(app):
     for s in app.shapes:
         s.check_collision(app.capture.pose_dict)
 
-    app.overlay.setTexture(frame)
+    if frame is not None:
+        app.overlay.setTexture(frame)
 
 
 def main(mesh_name: str):
 
     capture = ModelThread(0)
 
-    shape_factory = lambda: Balloon(
-        mesh_name, EulerMotion([np.random.random() * 2 - 1, 2, -4], [0, 0, 0], object_id="motion"),
-        0.5, 0.075, 1., **MATERIAL_DEFAULT_GLOBAL_DICT,
-    )
+    def shape_factory():
+        random_x = np.random.random() * 2 - 1
+        spawn_time = np.random.randint(120, 400)
+        balloon = Balloon(
+            mesh_name, EulerMotion([random_x, 2, -4], [0, 0, 0], object_id="motion"),
+            0.5, 0.075, 1., spawn_time, **MATERIAL_DEFAULT_GLOBAL_DICT,
+        )
+        return balloon
 
     shape_shader_args = (
         'Shaders/specular.vert',

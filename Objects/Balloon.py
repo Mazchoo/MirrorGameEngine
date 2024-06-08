@@ -1,34 +1,46 @@
 
 import numpy as np
+from copy import copy
 
 from Common.ObjMtlMesh import ObjMtlMesh
 from Common.EulerMotion import EulerMotion
-from PoseEstimation.pose import Pose
 from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL, DESPAWN_LEVEL
 
 class Balloon(ObjMtlMesh):
 
     __slots__ = 'terminal_velocity', 'velocity', 'density', 'responsive',\
-                'running', 'response_count', 'despawn'
+                'running', 'response_count', 'despawn', 'spawn_time', \
+                'spawn_count', 'initial_position', 'initial_angles'
 
     def __init__(self, file_path: str, motion: EulerMotion, normalize_scale: float,
-                 drag: float, density: float, **kwargs):
+                 drag: float, density: float, spawn_time: int, **kwargs):
         super().__init__(file_path, motion, normalize_scale, **kwargs)
 
         self.terminal_velocity = drag
         self.velocity = np.array([0, 0, 0], dtype=np.float32)
         self.density = density
         self.responsive = True
-        self.running = True
+        self.running = False
         self.response_count = 0
         self.despawn = False
+        self.initial_position = copy(self.motion.position)
+        self.initial_angles = copy(self.motion.angles)
+        self.spawn_time = spawn_time
+        self.spawn_count = spawn_time
 
     def update(self):
+        if self.despawn:
+            return
+
         if self.screen_centroid[1] > DESPAWN_LEVEL + IMAGE_SIZE[1]:
             self.running = False
             self.despawn = True
 
         if not self.running:
+            if self.spawn_count > 0:
+                self.spawn_count -= 1
+            if self.spawn_count <= 0:
+                self.running = True
             return
 
         if not self.responsive:
@@ -80,8 +92,13 @@ class Balloon(ObjMtlMesh):
                 velocity /= (mass + body_part_mass)
                 self.velocity[:2] = velocity
 
-                self.response_count = 10
+                self.response_count = 5
                 self.responsive = False
                 break
 
-        
+    def respawn(self):
+        self.motion.position = self.initial_position
+        self.motion.angles = self.initial_angles
+        self.velocity = np.array([0, 0, 0], dtype=np.float32)
+        self.spawn_count = self.spawn_time
+        self.despawn = True 
