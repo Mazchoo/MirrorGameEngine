@@ -115,16 +115,12 @@ class Balloon(ObjMtlMesh):
             return False
 
         balloon = balloons[0]
-        if not balloon.responsive:
-            return False
 
         mass = balloon.density * balloon.volume
         min_x, min_y = balloon.screen_bbox[0]
         max_x, max_y = balloon.screen_bbox[2]
 
         for other in balloons[1:]:
-            if other.responsive:
-                continue
 
             other_mass = other.density * other.volume
             other_min_x, other_min_y = other.screen_bbox[0]
@@ -147,10 +143,6 @@ class Balloon(ObjMtlMesh):
                 balloon.velocity[0] = -speed
                 other.velocity[0] = speed
 
-            balloon.response_count = 3
-            balloon.responsive = False
-            other.response_count = 3
-            other.responsive = False
             return True
 
         return False
