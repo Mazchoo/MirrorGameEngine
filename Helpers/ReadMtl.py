@@ -23,7 +23,7 @@ def parse_vertex(line):
 
 
 def get_texture(current_dict):
-    if texture := current_dict.get('texture_file'):
+    if texture := current_dict.get('texture'):
         return texture
     if texture := current_dict.get('diffuse_weighting'):
         return tuple(texture)
@@ -84,7 +84,7 @@ def parse_mtl(obj_path: str):
             elif flag == 'illum':
                 current_dict['illumination_model'] = int(line_content)
             elif flag == 'map_Kd':
-                current_dict['texture_file'] = parse_material(line_content, mtl_path)
+                current_dict['texture'] = parse_material(line_content, mtl_path)
             elif flag == 'Ti':
                 current_dict['specular_tint'] = float(line_content)
 

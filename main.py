@@ -16,7 +16,6 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
                              SCREEN_SIZE, RELEASE_MODE)
 
 '''
-    TODO - Add randomisation to the factory producing objects
     TODO - Make balloons bounce off each other
     TODO - Add tilting to balloons
     TODO - Add compression shader to some objects
@@ -65,10 +64,16 @@ def main(mesh_name: str):
 
     def shape_factory():
         random_x = np.random.random() * 2 - 1
+        motion = EulerMotion([random_x, 2.25, -4], [0, 0, 0], object_id="motion")
         spawn_time = np.random.randint(120, 400)
+        hue_offset = np.random.choice([12, 20, 0, 0, 0, 60, 25])
+        color_variation = {
+            'ObjFiles\\Balloon\\string.png': 0,
+            'ObjFiles\\Balloon\\rubber.png': hue_offset
+        }
         balloon = Balloon(
-            mesh_name, EulerMotion([random_x, 2, -4], [0, 0, 0], object_id="motion"),
-            0.5, 0.075, 1., spawn_time, **MATERIAL_DEFAULT_GLOBAL_DICT,
+            mesh_name, motion, 0.5, color_variation,
+            0.075, 1., spawn_time, **MATERIAL_DEFAULT_GLOBAL_DICT,
         )
         return balloon
 
@@ -96,7 +101,7 @@ def main(mesh_name: str):
     app = GameLoop(shape_factory, shape_shader_args,
                    overlay_factory, overlay_shader_args, player, light, 
                    capture, limit_frame_rate=True, main_loop_command=update,
-                   screen_size=SCREEN_SIZE, nr_shapes=3, draw3d=True)
+                   screen_size=SCREEN_SIZE, nr_shapes=5, draw3d=True)
     return app
 
 

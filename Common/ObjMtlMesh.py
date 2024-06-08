@@ -21,7 +21,8 @@ class ObjMtlMesh:
     __slots__ = 'centroid', 'bbox', 'vao', 'vbo', 'texture_data', 'materials', \
                 'draw_iterator', 'motion', 'globals', 'volume', 'screen_bbox', 'screen_centroid'
 
-    def __init__(self, file_path: str, motion: EulerMotion, normalize_scale: float, **kwargs):
+    def __init__(self, file_path: str, motion: EulerMotion, 
+                 normalize_scale: float, color_variation: dict, **kwargs):
 
         self.motion = motion
         vertices, self.texture_data, mtl_dict = parse_obj(file_path)
@@ -41,7 +42,8 @@ class ObjMtlMesh:
         self.materials = []
         self.draw_iterator = []
         for material_data in mtl_dict.values():
-            material = ShinyMaterial(**material_data)
+            hue_offset = color_variation.get(material_data['texture'])
+            material = ShinyMaterial(hue_offset, **material_data)
             self.materials.append(material)
 
             texture = self.texture_data.get(material_data['texture'])

@@ -12,9 +12,10 @@ class Balloon(ObjMtlMesh):
                 'running', 'response_count', 'despawn', 'spawn_time', \
                 'spawn_count', 'initial_position', 'initial_angles'
 
-    def __init__(self, file_path: str, motion: EulerMotion, normalize_scale: float,
+    def __init__(self, file_path: str, motion: EulerMotion,
+                 normalize_scale: float, color_variation: dict,
                  drag: float, density: float, spawn_time: int, **kwargs):
-        super().__init__(file_path, motion, normalize_scale, **kwargs)
+        super().__init__(file_path, motion, normalize_scale, color_variation, **kwargs)
 
         self.terminal_velocity = drag
         self.velocity = np.array([0, 0, 0], dtype=np.float32)
@@ -54,10 +55,10 @@ class Balloon(ObjMtlMesh):
             self.velocity *= self.terminal_velocity / velocity_sq
 
         if self.screen_bbox[2][0] > IMAGE_SIZE[0] and self.velocity[0] < 0:
-            self.velocity[0] *= -1
+            self.velocity[0] *= -0.75
 
         if self.screen_bbox[0][0] < 0 and self.velocity[0] > 0:
-            self.velocity[0] *= -1
+            self.velocity[0] *= -0.75
 
         if self.screen_bbox[0][1] < CEILING_LEVEL and self.velocity[1] > 0:
             self.velocity[1] *= -0.5

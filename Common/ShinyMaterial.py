@@ -1,13 +1,15 @@
+from numbers import Number
 
+import numpy as np
 from OpenGL.GL import (glBindTexture, glGenTextures, glTexParameter, glTexImage2D,
                        glGenerateMipmap, glGetUniformLocation, glUniform3fv,
                        glUniform1f, glActiveTexture, glDeleteTextures)
 from OpenGL.GL import (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_REPEAT,
                        GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_NEAREST, GL_LINEAR,
                        GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE0)
-import pygame as pg
-import numpy as np
-from numbers import Number
+
+from Helpers.ImageUtil import read_image_data_from_source
+
 
 # This value determines the shinyness of a material
 # Values in mtl files range from 0-400
@@ -52,7 +54,7 @@ class ShinyMaterial:
         Should handle all output produced by Helper.ReadMtl
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, hue_offset, **kwargs):
         # ToDo : Consider making a class with a struct for global variables
         self.ambient_weighting = get_value_or_default(kwargs, 'ambient_weighting', DEFAULT_AMBIENT_WEIGHTING)
         self.diffuse_weighting = get_value_or_default(kwargs, 'diffuse_weighting', DEFAULT_DIFFUSE_WEIGHTING)
@@ -73,20 +75,11 @@ class ShinyMaterial:
         glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-        # ToDo : Make image util for this
-        texture_source = kwargs['texture']
-        if isinstance(texture_source, str):
-            image = pg.image.load(texture_source).convert_alpha()
-        else:
-            texture_array = np.array([[texture_source]], dtype=np.float32)
-            image = pg.surfarray.make_surface(texture_array)
-
-        image_width, image_height = image.get_rect().size
-        image_data = pg.image.tostring(image, "RGBA")
+        image_data, width, height = read_image_data_from_source(kwargs["texture"], hue_offset)
 
         # First argument is used to downscale image at further distances
         # Other zero argument represents border color
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data)
         glGenerateMipmap(GL_TEXTURE_2D)
 
         self.global_check_passed = False
