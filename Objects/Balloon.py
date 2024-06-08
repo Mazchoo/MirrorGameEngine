@@ -8,7 +8,7 @@ from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL, DESPAWN
 
 class Balloon(ObjMtlMesh):
 
-    __slots__ = 'terminal_velocity', 'velocity', 'density', 'responsive',\
+    __slots__ = 'terminal_velocity', 'velocity', 'angular_velocity', 'density', 'responsive',\
                 'running', 'response_count', 'despawn', 'spawn_time', \
                 'spawn_count', 'initial_position', 'initial_angles'
 
@@ -19,6 +19,7 @@ class Balloon(ObjMtlMesh):
 
         self.terminal_velocity = drag
         self.velocity = np.array([0, 0, 0], dtype=np.float32)
+        self.angular_velocity = np.array([0, 0, 0], dtype=np.float32)
         self.density = density
         self.responsive = True
         self.running = False
@@ -63,8 +64,13 @@ class Balloon(ObjMtlMesh):
         if self.screen_bbox[0][1] < CEILING_LEVEL and self.velocity[1] > 0:
             self.velocity[1] *= -0.5
 
+        self.angular_velocity[0] *= 0.8
+        self.angular_velocity[1] -= 0.01 * self.motion.angles[1]
+        self.angular_velocity[2] *= 0.8
+
         self.motion.position += self.velocity
-        self.motion.recalculate_motion_matrix(position=True)
+        self.motion.angles += self.angular_velocity
+        self.motion.recalculate_motion_matrix(position=True, angles=True)
 
     def draw(self):
         if self.despawn or not self.running:
@@ -76,7 +82,7 @@ class Balloon(ObjMtlMesh):
             return
 
         mass = self.density * self.volume
-        body_part_mass = 2 #  ToDo - trying varying this
+        body_part_mass = 3 #  ToDo - trying varying this
         min_x, min_y = self.screen_bbox[0]
         max_x, max_y = self.screen_bbox[2]
 
@@ -92,6 +98,10 @@ class Balloon(ObjMtlMesh):
                 velocity = (mass * self.velocity[:2] + body_part_mass * collision_v)
                 velocity /= (mass + body_part_mass)
                 self.velocity[:2] = velocity
+
+                self.angular_velocity[0] += 0.05
+                self.angular_velocity[1] -= 0.0005 * collision_v[0]
+                self.angular_velocity[2] += 0.02
 
                 self.response_count = 5
                 self.responsive = False
