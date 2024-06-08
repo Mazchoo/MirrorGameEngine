@@ -16,7 +16,6 @@ from Helpers.Globals import (MATERIAL_DEFAULT_GLOBAL_DICT, LIGHT_DEFAULT_GLOBAL_
                              SCREEN_SIZE, RELEASE_MODE)
 
 '''
-    TODO - Make balloons bounce off each other
     TODO - Add compression shader to some objects
 '''
 
@@ -36,22 +35,25 @@ def setupOverlayShader(shader_id):
 
 def update(app):
     app.engine.useShader(1)
-    for s in app.shapes:
-        s.update()
-        s.update_bbox_and_centroid(app.player)
+    for balloon in app.balloons:
+        balloon.update()
+        balloon.update_bbox_and_centroid(app.player)
     frame = app.capture.frame
 
     if not RELEASE_MODE and frame is not None:
-        for s in app.shapes:
-            cog = s.screen_centroid
-            bbox = s.screen_bbox
+        for balloon in app.balloons:
+            cog = balloon.screen_centroid
+            bbox = balloon.screen_bbox
 
             frame = frame.copy() # Use local copy of frame
             cv2.polylines(frame, [bbox], True, (0, 0, 255))
             cv2.circle(frame, cog, radius=2, color=(255, 0, 0), thickness=1)
 
-    for s in app.shapes:
-        s.check_collision(app.capture.pose_dict)
+    for balloon in app.balloons:
+        balloon.check_collision(app.capture.pose_dict)
+
+    for i in range(len(app.balloons) - 1):
+        balloon.check_balloon_collision(app.balloons[i:])
 
     if frame is not None:
         app.overlay.setTexture(frame)

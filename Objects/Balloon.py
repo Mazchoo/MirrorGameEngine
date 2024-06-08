@@ -1,6 +1,6 @@
+from copy import copy
 
 import numpy as np
-from copy import copy
 
 from Common.ObjMtlMesh import ObjMtlMesh
 from Common.EulerMotion import EulerMotion
@@ -77,9 +77,9 @@ class Balloon(ObjMtlMesh):
             return
         super().draw()
 
-    def check_collision(self, pose: dict):
+    def check_collision(self, pose: dict) -> bool:
         if not self.responsive:
-            return
+            return False
 
         mass = self.density * self.volume
         body_part_mass = 3 #  ToDo - trying varying this
@@ -105,7 +105,51 @@ class Balloon(ObjMtlMesh):
 
                 self.response_count = 5
                 self.responsive = False
-                break
+                return True
+
+        return False
+
+    @staticmethod
+    def check_balloon_collision(balloons: list) -> bool:
+        if len(balloons) < 2:
+            return False
+
+        balloon = balloons[0]
+        if not balloon.responsive:
+            return False
+
+        mass = balloon.density * balloon.volume
+        min_x, min_y = balloon.screen_bbox[0]
+        max_x, max_y = balloon.screen_bbox[2]
+
+        for other in balloons[1:]:
+            other_mass = other.density * other.volume
+            other_min_x, other_min_y = other.screen_bbox[0]
+            other_max_x, other_max_y = other.screen_bbox[2]
+
+            if min_x > other_max_x or other_min_x > max_x:
+                continue
+
+            if min_y > other_max_y or other_min_y > max_y:
+                continue
+
+            speed = (mass * balloon.velocity[0] + other_mass * other.velocity[0])
+            speed /= (mass + other_mass)
+
+            if balloon.screen_centroid[0] < other.screen_centroid[0]:
+                balloon.velocity[0] = speed
+                other.velocity[0] = -speed
+            else:
+                balloon.velocity[0] = -speed
+                other.velocity[0] = speed
+
+            balloon.response_count = 3
+            balloon.responsive = False
+            other.response_count = 3
+            other.responsive = False
+            return True
+
+        return False
 
     def respawn(self):
         self.motion.position = self.initial_position

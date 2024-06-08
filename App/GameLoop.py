@@ -8,15 +8,15 @@ from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
 from Common.MultiShaderGameEngine import MultiShaderGameEngine
 
 
-def create_all_shapes(shape_factory: Callable, nr_shapes: int):
-    shapes = []
+def create_all_shapes(shape_factory: Callable, nr_shapes: int) -> list:
+    balloons = []
     total_spawn_time = 0
     for _ in range(nr_shapes):
         balloon = shape_factory()
         total_spawn_time += balloon.spawn_time
         balloon.spawn_count = total_spawn_time
-        shapes.append(balloon)
-    return shapes
+        balloons.append(balloon)
+    return balloons
 
 class GameLoop:
 
@@ -32,12 +32,12 @@ class GameLoop:
 
         with self.engine(0) as shape_shader_id:
             self.light = light
-            self.shapes = create_all_shapes(shape_factory, nr_shapes)
+            self.balloons = create_all_shapes(shape_factory, nr_shapes)
             self.player = player
 
             self.light.bind_global_variable_names(shape_shader_id)
-            for s in self.shapes:
-                s.bind_global_variable_names(shape_shader_id) 
+            for balloon in self.balloons:
+                balloon.bind_global_variable_names(shape_shader_id) 
             self.player.bind_global_variable_names(shape_shader_id)
 
         with self.engine(1):
@@ -84,7 +84,7 @@ class GameLoop:
 
             self.handle_keys()
             if self.draw3d:
-                for s in self.shapes: s.draw()
+                for s in self.balloons: s.draw()
 
             pg.display.flip()
 
@@ -108,7 +108,8 @@ class GameLoop:
         self.num_frames += 1
 
     def quit(self):
-        for s in self.shapes: s.destroy()
+        for balloon in self.balloons:
+            balloon.destroy()
         self.engine.destroy()
         self.overlay.destroy()
         self.capture.stop()
