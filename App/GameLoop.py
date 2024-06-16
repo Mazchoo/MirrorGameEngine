@@ -5,7 +5,7 @@ from OpenGL.GL import (glClear, glDisable, glEnable)
 from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
                        GL_CULL_FACE)
 
-from Common.MultiShaderGameEngine import MultiShaderGameEngine
+from Common.OverlayEngine import OverlayEngine
 from Helpers.SoundPlayer import SoundPlayer
 
 
@@ -25,7 +25,7 @@ class GameLoop:
                  capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), nr_balloons=10,
                  limit_frame_rate=True, main_loop_command=lambda x: x, draw3d=True):
 
-        self.engine = MultiShaderGameEngine(screen_size, background_col)
+        self.engine = OverlayEngine(screen_size, background_col)
         self.engine.addShader(*shape_args)
         self.engine.addShader(*overlay_args)
 

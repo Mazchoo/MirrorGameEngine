@@ -1,6 +1,6 @@
 from Helpers.Globals import RELEASE_MODE
 from Helpers.ImageUtil import draw_balloon_bounding_boxes
-from App.Setup import setup_app
+from App.SetupGameLoop import setup_app
 
 
 def update(app):

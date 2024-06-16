@@ -50,7 +50,7 @@ def setup_app(obj_file: str, update_callback: Callable):
         return balloon
 
     shape_shader_args = (
-        'Shaders/specular.vert',
+        'Shaders/model.vert',
         'Shaders/material.frag',
         setup3DObjectShader
     )

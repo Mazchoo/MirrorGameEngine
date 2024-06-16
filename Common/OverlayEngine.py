@@ -6,7 +6,7 @@ from OpenGL.GL import GL_DEPTH_TEST
 from Common.ShaderProgram import ShaderProgram
 
 
-class MultiShaderGameEngine:
+class OverlayEngine:
     '''
         3D Engine that sets up pygame and compiles multiple shader.
         Can switch between shaders when in a game loop.

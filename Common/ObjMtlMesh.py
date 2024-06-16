@@ -1,3 +1,4 @@
+from typing import Optional
 
 from OpenGL.GL import (glBindVertexArray, glDrawArrays, glDeleteVertexArrays,
                        glDeleteBuffers)
@@ -22,7 +23,10 @@ class ObjMtlMesh:
                 'draw_iterator', 'motion', 'globals', 'volume', 'screen_bbox', 'screen_centroid'
 
     def __init__(self, file_path: str, motion: EulerMotion, 
-                 normalize_scale: float, color_variation: dict, **kwargs):
+                 normalize_scale: float, color_variation: Optional[dict] = None, **kwargs):
+
+        if color_variation is None:
+            color_variation = {}
 
         self.motion = motion
         vertices, self.texture_data, mtl_dict = parse_obj(file_path)
