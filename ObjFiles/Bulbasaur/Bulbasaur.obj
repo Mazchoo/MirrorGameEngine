@@ -1,6 +1,6 @@
 # Blender 4.0.2
 # www.blender.org
-mtllib Bulbasaur2.mtl
+mtllib Bulbasaur.mtl
 o Texture_0_png
 v -5.490000 20.340000 4.410002
 v -4.410000 19.439997 6.750001

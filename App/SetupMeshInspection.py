@@ -24,7 +24,7 @@ def mesh_view(mesh_name: str, fragement_file: str, light_intensity: float, scale
 
     light = ReflectiveLight([0, 2, -3], [1, 1, 1], light_intensity, 1., 1., 8., **LIGHT_DEFAULT_GLOBAL_DICT)
 
-    app = InspectionApp(shape_factory, 'Shaders/model.vert', fragement_file, player, light,
+    app = InspectionApp(shape_factory, 'Shaders/motion.vert', fragement_file, player, light,
                         limit_frame_rate=True, main_loop_command=update_camera_position)
     return app
 
