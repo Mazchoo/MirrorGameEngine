@@ -39,18 +39,15 @@ class TensorRTModel:
     def create_context(self):
         self.context = self.engine.create_execution_context() 
 
-    def clear_context(self):
-        self.context.pop()
-
     def __call__(self, inp: np.ndarray):
         cuda.Context.push(pycuda.autoinit.context)
-        with self.context as context:
-            np.copyto(self.inputs[0]['host'], inp)
-            cuda.memcpy_htod_async(self.inputs[0]['device'], self.inputs[0]['host'], self.stream)
-            self.success = context.execute_v2(self.bindings)
-            cuda.memcpy_dtoh_async(self.outputs[2]['host'], self.outputs[2]['device'], self.stream)
-            cuda.memcpy_dtoh_async(self.outputs[3]['host'], self.outputs[3]['device'], self.stream)
-            self.stream.synchronize()
+        np.copyto(self.inputs[0]['host'], inp)
+        cuda.memcpy_htod_async(self.inputs[0]['device'], self.inputs[0]['host'], self.stream)
+        self.success = self.context.execute_v2(self.bindings)
+        cuda.memcpy_dtoh_async(self.outputs[2]['host'], self.outputs[2]['device'], self.stream)
+        cuda.memcpy_dtoh_async(self.outputs[3]['host'], self.outputs[3]['device'], self.stream)
+        self.stream.synchronize()
+        cuda.Context.pop()
         return self.outputs[2]['host'], self.outputs[3]['host']
 
 

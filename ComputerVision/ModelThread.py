@@ -39,5 +39,4 @@ class ModelThread:
                     self.pose_dict = {}
 
     def stop(self):
-        self.model.net.clear_context()
         self.stopped = True
