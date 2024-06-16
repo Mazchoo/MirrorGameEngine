@@ -107,9 +107,9 @@ class PoseEstimationWithMobileNet(nn.Module):
 
         self.initial_stage = InitialStage(num_channels, num_heatmaps, num_pafs)
         self.refinement_stages = nn.ModuleList()
-        for idx in range(num_refinement_stages):
-            self.refinement_stages.append(RefinementStage(num_channels + num_heatmaps + num_pafs, num_channels,
-                                                          num_heatmaps, num_pafs))
+        for _ in range(num_refinement_stages):
+            self.refinement_stages.append(RefinementStage(num_channels + num_heatmaps + num_pafs,
+                                                          num_channels, num_heatmaps, num_pafs))
 
     def forward(self, x):
         backbone_features = self.model(x)

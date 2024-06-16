@@ -1,5 +1,6 @@
 from threading import Thread
 import cv2
+import pycuda.driver as cuda
 
 from PoseEstimation.run import CheckPointMobileNet
 from PoseEstimation.model_params import TRT_PATH
@@ -20,6 +21,7 @@ class ModelThread:
 
     def start(self):
         Thread(target=self.get, args=()).start()
+        self.model.net.create_context()
         return self
 
     def get(self):
@@ -37,4 +39,5 @@ class ModelThread:
                     self.pose_dict = {}
 
     def stop(self):
+        self.model.net.clear_context()
         self.stopped = True
