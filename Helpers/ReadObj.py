@@ -20,18 +20,16 @@ def add_to_negative_vertex(value):
     return value
 
 
-def parse_texture_coord(line, invert_negative):
+def parse_texture_coord(line):
     vertex = [float(x) for x in line.split(' ')]
 
     if len(vertex) != 2:
         raise ValueError(f'Texture Coord {line} is wrong length.')
 
-    if invert_negative:
-        vertex[0] = invert_negative_vertex(vertex[0])
-        vertex[1] = invert_negative_vertex(vertex[1])
-    else:
-        vertex[0] = add_to_negative_vertex(vertex[0])
-        vertex[1] = add_to_negative_vertex(vertex[1])
+
+    vertex[0] = add_to_negative_vertex(vertex[0])
+    vertex[1] = add_to_negative_vertex(vertex[1])
+    vertex[0] = 1 - vertex[0]
 
     return vertex
 
@@ -76,7 +74,7 @@ def convert_parsed_data_to_numpy(faces, vertices, textures, normals):
     return vertext_data, texture_data
 
 
-def parse_obj(file_path, invert_negative=True):
+def parse_obj(file_path):
     mtl_dict = parse_mtl(file_path)
 
     faces = {}
@@ -99,7 +97,7 @@ def parse_obj(file_path, invert_negative=True):
             elif flag == 'v':
                 vertices.append(parse_vertex(line_content))
             elif flag == 'vt':
-                textures.append(parse_texture_coord(line_content, invert_negative))
+                textures.append(parse_texture_coord(line_content))
             elif flag == 'vn':
                 normals.append(parse_vertex(line_content))
             elif flag == 'f':

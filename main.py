@@ -32,4 +32,4 @@ def update(app):
 
 
 if __name__ == '__main__':
-    setup_app('ObjFiles/Balloon/balloon.obj', update)
+    setup_app('./ObjFiles/Bulbasaur/Bulbasaur.obj', update)

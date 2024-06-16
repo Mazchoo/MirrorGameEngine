@@ -19,18 +19,23 @@ class Balloon(ObjMtlMesh):
                  drag: float, density: float, spawn_time: int, **kwargs):
         super().__init__(file_path, motion, normalize_scale, color_variation, **kwargs)
 
-        self.terminal_velocity = drag
+        # Velocities
         self.velocity = np.array([0, 0, 0], dtype=np.float32)
         self.angular_velocity = np.array([0, 0, 0], dtype=np.float32)
+
+        # Constants
         self.density = density
+        self.spawn_time = spawn_time
+        self.spawn_count = spawn_time
+        self.terminal_velocity = drag
+        self.initial_position = self.motion.position.copy()
+        self.initial_angles = self.motion.angles.copy()
+
+        # Running state
         self.responsive = True
         self.running = False
         self.response_count = 0
         self.despawn = False
-        self.initial_position = self.motion.position.copy()
-        self.initial_angles = self.motion.angles.copy()
-        self.spawn_time = spawn_time
-        self.spawn_count = spawn_time
 
     def update(self):
         if self.despawn:
