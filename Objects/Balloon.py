@@ -4,7 +4,9 @@ import numpy as np
 
 from Common.ObjMtlMesh import ObjMtlMesh
 from Common.EulerMotion import EulerMotion
-from Helpers.Globals import GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL, DESPAWN_LEVEL
+from Helpers.Globals import (GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL, DESPAWN_LEVEL,
+                             WALL_MOMENTUM_DROP, CEILING_MOMENTUM_DROP, FRAME_YZ_SPEED_DROP,
+                             FRAME_XY_DISTURBANCE_RATIO, FRAME_XZ_SPEED_DROP)
 
 class Balloon(ObjMtlMesh):
 
@@ -56,17 +58,17 @@ class Balloon(ObjMtlMesh):
             self.velocity *= self.terminal_velocity / velocity_sq
 
         if self.screen_bbox[2][0] > IMAGE_SIZE[0] and self.velocity[0] < 0:
-            self.velocity[0] *= -0.75
+            self.velocity[0] *= -WALL_MOMENTUM_DROP
 
         if self.screen_bbox[0][0] < 0 and self.velocity[0] > 0:
-            self.velocity[0] *= -0.75
+            self.velocity[0] *= -WALL_MOMENTUM_DROP
 
         if self.screen_bbox[0][1] < CEILING_LEVEL and self.velocity[1] > 0:
-            self.velocity[1] *= -0.5
+            self.velocity[1] *= -CEILING_MOMENTUM_DROP
 
-        self.angular_velocity[0] *= 0.8
-        self.angular_velocity[1] -= 0.01 * self.motion.angles[1]
-        self.angular_velocity[2] *= 0.8
+        self.angular_velocity[0] *= FRAME_YZ_SPEED_DROP
+        self.angular_velocity[1] -= FRAME_XY_DISTURBANCE_RATIO * self.motion.angles[1]
+        self.angular_velocity[2] *= FRAME_XZ_SPEED_DROP
 
         self.motion.position += self.velocity
         self.motion.angles += self.angular_velocity
