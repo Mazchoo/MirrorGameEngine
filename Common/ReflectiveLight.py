@@ -2,7 +2,8 @@
 import numpy as np
 from OpenGL.GL import (glUniform3fv, glUniform1f)
 
-from Helpers.Globals import bind_globals_to_object, get_global_object_id
+from Helpers.Globals import (bind_globals_to_object, get_global_object_id,
+                             LIGHT_FREQUENCY , LIGHT_AMPLITUDE, LIGHT_CONSTANT)
 
 
 class ReflectiveLight:
@@ -58,3 +59,7 @@ class ReflectiveLight:
 
     def bind_global_variable_names(self, shader):
         bind_globals_to_object(self, shader)
+    
+    def cycle_light_strength(self, frame, shader):
+        self.strength = np.cos(frame * LIGHT_FREQUENCY) * LIGHT_AMPLITUDE + LIGHT_CONSTANT
+        self.set_strength_to_global(shader)

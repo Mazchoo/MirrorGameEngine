@@ -53,6 +53,7 @@ class GameLoop:
 
         self.limit_frame_rate = limit_frame_rate
         self.last_time = pg.time.get_ticks()
+        self.total_frames = 0
         self.num_frames = 0
         self.frame_time = 1.
 
@@ -106,6 +107,7 @@ class GameLoop:
             self.num_frames = 0
 
         self.num_frames += 1
+        self.total_frames += 1
 
     def quit(self):
         for balloon in self.balloons:

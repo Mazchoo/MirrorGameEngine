@@ -1,5 +1,6 @@
 
 from OpenGL.GL import glGetUniformLocation
+import numpy as np
 
 
 def get_global_object_id(obj, attr_name: str, shader: int = None, var_name: str = None):
@@ -65,3 +66,8 @@ CEILING_MOMENTUM_DROP = 0.5
 FRAME_YZ_SPEED_DROP = 0.8
 FRAME_XY_DISTURBANCE_RATIO = 0.01
 FRAME_XZ_SPEED_DROP = 0.8
+
+# Light cycle
+LIGHT_FREQUENCY = 1 / (8 * np.pi)
+LIGHT_AMPLITUDE = 0.4
+LIGHT_CONSTANT = 1.6

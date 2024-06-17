@@ -1,10 +1,14 @@
 from Helpers.Globals import RELEASE_MODE
 from Helpers.ImageUtil import draw_balloon_bounding_boxes
 from App.SetupGameLoop import setup_app
+import numpy as np
 
 
 def update(app):
     ''' Update the game logic of the app every frame. '''
+    app.engine.useShader(0)
+    app.light.cycle_light_strength(app.total_frames, 0)
+
     app.engine.useShader(1)
 
     for balloon in app.balloons:
