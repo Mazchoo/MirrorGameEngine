@@ -35,7 +35,7 @@ class InspectionApp:
 
         self.limit_frame_rate = limit_frame_rate
         self.last_time = pg.time.get_ticks()
-        self.num_frames = 0
+        self.frame_freq = 0
         self.frame_time = 1.
 
         self.screen_width, self.screen_height = screen_size
@@ -44,13 +44,24 @@ class InspectionApp:
         self.main_loop(main_loop_command)
 
     def handle_keys(self):
-        direction_modifier = get_directional_key_combination(pg.key.get_pressed())
+        direction_modifier, up, down = get_directional_key_combination(pg.key.get_pressed())
+        dir_movement = direction_modifier is not None
 
-        if direction_modifier is not None:
+        if dir_movement or up or down:
+            delta_x = np.sin(self.player.theta + direction_modifier) if dir_movement else 0.
+            delta_z = np.cos(self.player.theta + direction_modifier) if dir_movement else 0.
+
+            if up:
+                delta_y = -1.
+            elif down:
+                delta_y = 1.
+            else:
+                delta_y = 0.
+        
             delta_postion = [
-                self.frame_time * 0.0025 * np.sin(self.player.theta + direction_modifier),
-                0,
-                self.frame_time * 0.0025 * np.cos(self.player.theta + direction_modifier)
+                self.frame_time * 0.0025 * delta_x,
+                self.frame_time * 0.0025 * delta_y,
+                self.frame_time * 0.0025 * delta_z
             ]
 
             self.player.increment_position(*delta_postion)
@@ -97,12 +108,13 @@ class InspectionApp:
         self.current_time = pg.time.get_ticks()
         delta = self.current_time - self.last_time
         if delta >= 1000:
-            frame_rate = max(1, int(1000. * self.num_frames / delta))
+            frame_rate = max(1, int(1000. * self.frame_freq / delta))
             pg.display.set_caption(f'Running at {frame_rate} fps')
             self.last_time = self.current_time
             self.frame_time = 1000. / max(1., frame_rate)
-            self.num_frames = 0
-        self.num_frames += 1
+            self.frame_freq = 0
+
+        self.frame_freq += 1
 
     def quit(self):
         self.shape.destroy()

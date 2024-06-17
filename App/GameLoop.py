@@ -54,7 +54,7 @@ class GameLoop:
         self.limit_frame_rate = limit_frame_rate
         self.last_time = pg.time.get_ticks()
         self.total_frames = 0
-        self.num_frames = 0
+        self.frame_freq = 0
         self.frame_time = 1.
 
         self.screen_width, self.screen_height = screen_size
@@ -100,13 +100,13 @@ class GameLoop:
         delta = self.current_time - self.last_time
 
         if delta >= 1000:
-            frame_rate = max(1, int(1000. * self.num_frames / delta))
+            frame_rate = max(1, int(1000. * self.frame_freq / delta))
             pg.display.set_caption(f'Running at {frame_rate} fps')
             self.last_time = self.current_time
             self.frame_time = 1000. / max(1., frame_rate)
-            self.num_frames = 0
+            self.frame_freq = 0
 
-        self.num_frames += 1
+        self.frame_freq += 1
         self.total_frames += 1
 
     def quit(self):

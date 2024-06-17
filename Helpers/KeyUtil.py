@@ -25,6 +25,8 @@ def get_directional_key_combination(keys):
     """
 
     key_combination = 0
+    up = keys[pg.K_UP]
+    down = keys[pg.K_DOWN]
 
     if keys[pg.K_w]:
         key_combination += 1
@@ -37,18 +39,20 @@ def get_directional_key_combination(keys):
 
     if key_combination > 0:
         if key_combination == 1:
-            return 0.
+            return 0., up, down
         elif key_combination == 3:
-            return np.pi * 0.25
+            return np.pi * 0.25, up, down
         elif key_combination == 2 or key_combination == 7:
-            return np.pi * 0.5
+            return np.pi * 0.5, up, down
         elif key_combination == 6:
-            return np.pi * 0.75
+            return np.pi * 0.75, up, down
         elif key_combination == 4 or key_combination == 14:
-            return np.pi
+            return np.pi, up, down
         elif key_combination == 12:
-            return np.pi * 1.25
+            return np.pi * 1.25, up, down
         elif key_combination == 8 or key_combination == 13:
-            return np.pi * 1.5
+            return np.pi * 1.5, up, down
         elif key_combination == 9:
-            return np.pi * 1.75
+            return np.pi * 1.75, up, down
+
+    return None, up, down
