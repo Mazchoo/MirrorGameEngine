@@ -5,7 +5,7 @@ from OpenGL.GL import glUniformMatrix4fv
 from OpenGL.GL import GL_FALSE
 
 from Common.Camera import Camera
-from Helpers.Globals import bind_globals_to_object, get_global_object_id
+from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
 
 
 class Player:

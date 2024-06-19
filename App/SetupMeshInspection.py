@@ -18,7 +18,7 @@ def mesh_view(mesh_name: str, fragement_file: str, light_intensity: float, scale
 
     shape_factory = lambda: ObjMtlMesh(mesh_name, motion_model, scale, {}, **MATERIAL_DEFAULT_GLOBAL_DICT)
 
-    camera = PositionCamera(fovy=45, aspect=640 / 480, near=.1, far=10, position=(0, 0, 0),
+    camera = PositionCamera(fovy=45, aspect=640 / 480, near=.1, far=20, position=(0, 0, 0),
                             object_id="projection", position_glob_id="cameraPosition")
     player = Player(camera, object_id="view")
 
@@ -27,7 +27,3 @@ def mesh_view(mesh_name: str, fragement_file: str, light_intensity: float, scale
     app = InspectionApp(shape_factory, 'Shaders/motion.vert', fragement_file, player, light,
                         limit_frame_rate=True, main_loop_command=update_camera_position)
     return app
-
-
-if __name__ == '__main__':
-    mesh_view('ObjFiles/Bulbasaur/Bulbasaur.obj')

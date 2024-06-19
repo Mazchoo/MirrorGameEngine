@@ -9,21 +9,9 @@ from OpenGL.GL import (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T, GL_R
                        GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE0)
 
 from Helpers.ImageUtil import read_image_data_from_source
-
-
-# This value determines the shinyness of a material
-# Values in mtl files range from 0-400
-# The exponent should be 0.1 (really shiny)
-# and it can be more than one
-SPECULAR_EXPONENT_WEIGHTING = 1 / 255.
-MIN_SPECULAR_EXPONENT = 0.2
-
-DEFAULT_AMBIENT_WEIGHTING = (0.2, 0.2, 0.2)
-DEFAULT_DIFFUSE_WEIGHTING = (1.5, 1.5, 1.5)
-DEFAULT_SPECULAR_WEIGHTING = (1, 1, 1)
-DEFAULT_SPECULAR_EXPONENT = 0.75
-DEFAULT_OPACITY = 1.
-DEFAULT_SPECULAR_TINT = 0.
+from Helpers.Globals import (SPECULAR_EXPONENT_WEIGHTING, MIN_SPECULAR_EXPONENT, DEFAULT_AMBIENT_WEIGHTING,
+                             DEFAULT_DIFFUSE_WEIGHTING, DEFAULT_SPECULAR_WEIGHTING, DEFAULT_SPECULAR_EXPONENT,
+                             DEFAULT_OPACITY, DEFAULT_SPECULAR_TINT)
 
 
 GLOBAL_ID_NAMES = (
@@ -37,6 +25,7 @@ GLOBAL_ID_NAMES = (
 
 
 def get_value_or_default(query_dict: dict, key: str, default_value):
+    ''' Get value from parameters provided or return default '''
 
     result = query_dict[key] if key in query_dict else default_value
 

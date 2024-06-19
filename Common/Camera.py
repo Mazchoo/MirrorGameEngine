@@ -4,7 +4,7 @@ import numpy as np
 from OpenGL.GL import glUniformMatrix4fv
 from OpenGL.GL import GL_FALSE
 
-from Helpers.Globals import bind_globals_to_object, get_global_object_id
+from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
 
 
 class Camera:
@@ -22,6 +22,7 @@ class Camera:
         self.recalculate_projection(fovy, aspect, near, far)
 
     def recalculate_projection(self, fovy=None, aspect=None, near=None, far=None):
+        ''' Calculate projection matrix of the camera. '''
         fovy = fovy or self.fovy
         aspect = aspect or self.aspect
         near = near or self.near
@@ -39,5 +40,6 @@ class Camera:
         bind_globals_to_object(self, shader)
 
     def transform_vertex(self, vertex: np.ndarray):
+        ''' Apply equivealant GPU operation on CPU to 4d numpy array '''
         result = vertex @ self.projection_matrix
         return result

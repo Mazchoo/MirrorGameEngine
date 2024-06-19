@@ -5,6 +5,7 @@ from Helpers.ReadMtl import parse_mtl, parse_vertex
 
 
 def invert_negative_vertex(value):
+    ''' Method to fix negative values on a texture coordinate. '''
     if value < 0:
         value *= -1
     if value > 1:
@@ -13,6 +14,7 @@ def invert_negative_vertex(value):
 
 
 def add_to_negative_vertex(value):
+    ''' Method to fix negative values on a texture coordinate. '''
     if value < 0:
         value += 1
     if value > 1:
@@ -21,6 +23,7 @@ def add_to_negative_vertex(value):
 
 
 def parse_texture_coord(line):
+    ''' Parse value of the form texture coordinares, e.g. 0.491723 -0.123703 '''
     vertex = [float(x) for x in line.split(' ')]
 
     if len(vertex) != 2:
@@ -34,6 +37,7 @@ def parse_texture_coord(line):
 
 
 def parse_face(line):
+    ''' parse face coordinates e.g. 4/4/4 5/5/5 6/6/6 '''
     face = [[int(x) for x in f.split('/')] for f in line.split(' ')]
 
     if len(face) not in [3, 4]:
@@ -51,6 +55,7 @@ def parse_face(line):
 
 
 def convert_parsed_data_to_numpy(faces, vertices, textures, normals):
+    ''' Create an array of all vertices to draw in triplets for every face. '''
     texture_data = {
         path: {'count': sum([len(face) for face in face_list]),
                'offset': 0} for path, face_list in faces.items()
@@ -74,6 +79,7 @@ def convert_parsed_data_to_numpy(faces, vertices, textures, normals):
 
 
 def parse_obj(file_path):
+    ''' Parse every line of an .obj file into material dict and vertex numpy array '''
     mtl_dict = parse_mtl(file_path)
 
     faces = {}

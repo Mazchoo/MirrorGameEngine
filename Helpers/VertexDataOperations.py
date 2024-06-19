@@ -3,18 +3,14 @@ import numpy as np
 
 
 def normalize_l1(vertices: np.ndarray, factor=2):
+    ''' Scale all vertices down by maximum value. '''
     max_norm = np.abs(vertices).max()
     max_norm /= factor
     vertices /= max_norm
 
 
-def normalize_l2(vertices: np.ndarray, factor=2):
-    max_norm = np.sqrt(np.square(vertices).max())
-    max_norm /= factor
-    vertices /= max_norm
-
-
 def get_bbox_2d(vertices: np.ndarray):
+    ''' Get bounding box of vertices (min and max homogenous 4d coodinate) '''
     v_mins = np.concatenate([vertices[:, :3].min(axis=0), [1]])
     v_maxs = np.concatenate([vertices[:, :3].max(axis=0), [1]])
     bbox = np.vstack([v_mins, v_maxs])

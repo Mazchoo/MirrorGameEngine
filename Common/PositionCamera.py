@@ -3,7 +3,7 @@ import numpy as np
 from OpenGL.GL import glUniform3fv
 
 from Common.Camera import Camera
-from Helpers.Globals import bind_globals_to_object, get_global_object_id
+from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
 
 
 class PositionCamera(Camera):

@@ -7,6 +7,8 @@ import ctypes
 
 
 def generate_vertex_buffers(vertices: np.ndarray):
+    ''' Turn a numpy array to data that can go to the GPU. '''
+
     # Vertex array object tells us what is in the object
     vao = glGenVertexArrays(1)
     glBindVertexArray(vao)

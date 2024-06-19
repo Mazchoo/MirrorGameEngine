@@ -16,7 +16,7 @@ class Balloon(ObjMtlMesh):
 
     def __init__(self, file_path: str, motion: EulerMotion,
                  normalize_scale: float, color_variation: dict,
-                 drag: float, density: float, spawn_time: int, **kwargs):
+                 terminal_velocity: float, density: float, spawn_time: int, **kwargs):
         super().__init__(file_path, motion, normalize_scale, color_variation, **kwargs)
 
         # Velocities
@@ -27,7 +27,7 @@ class Balloon(ObjMtlMesh):
         self.density = density
         self.spawn_time = spawn_time
         self.spawn_count = spawn_time
-        self.terminal_velocity = drag
+        self.terminal_velocity = terminal_velocity
         self.initial_position = self.motion.position.copy()
         self.initial_angles = self.motion.angles.copy()
 

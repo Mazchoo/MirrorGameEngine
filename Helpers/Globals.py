@@ -1,24 +1,5 @@
 
-from OpenGL.GL import glGetUniformLocation
 import numpy as np
-
-
-def get_global_object_id(obj, attr_name: str, shader: int = None, var_name: str = None):
-    if shader and var_name:
-        global_object_id = glGetUniformLocation(shader, var_name)
-    else:
-        global_object_id = getattr(obj, attr_name)
-        if global_object_id is None:
-            raise AttributeError("Color Id has not been set.")
-
-    return global_object_id
-
-
-def bind_globals_to_object(obj, shader: int):
-    for var_name, global_name in obj.globals.items():
-        global_uniform = glGetUniformLocation(shader, global_name)
-        setattr(obj, var_name, global_uniform)
-
 
 MATERIAL_DEFAULT_GLOBAL_DICT = {
     'ambient_weighting_glob_id': 'currentMaterial.ambientWeighting',
@@ -69,5 +50,44 @@ FRAME_XZ_SPEED_DROP = 0.8
 
 # Light cycle
 LIGHT_FREQUENCY = 1 / (8 * np.pi)
-LIGHT_AMPLITUDE = 0.4
-LIGHT_CONSTANT = 1.6
+LIGHT_AMPLITUDE = 0.1
+
+# Light parameters
+LIGHT_POSITION = (0., 2., -3.)
+LIGHT_COLOUR = (1., 1., 1.)
+LIGHT_STRENGTH = .8
+LIGHT_AMBIENT_STRENGTH = 1.
+LIGHT_MIN_DISTANCE = 1.
+LIGHT_MAX_DISTANCE = 8.
+
+# Material parameters
+SPECULAR_EXPONENT_WEIGHTING = 1 / 255.
+MIN_SPECULAR_EXPONENT = 0.2
+DEFAULT_AMBIENT_WEIGHTING = (0.2, 0.2, 0.2)
+DEFAULT_DIFFUSE_WEIGHTING = (1.5, 1.5, 1.5)
+DEFAULT_SPECULAR_WEIGHTING = (1, 1, 1)
+DEFAULT_SPECULAR_EXPONENT = 0.75
+DEFAULT_OPACITY = 1.
+DEFAULT_SPECULAR_TINT = 0.
+
+# Balloon spawn parameters
+NR_BALLOONS = 3
+PITCH_RANGE = 0.1
+ROLL_RANGE = np.pi * 2
+START_X_RANGE = 2
+START_Y = 2.25
+START_Z = -4
+MIN_START_DELAY = 120
+MAX_START_DELAY = 240
+POSSIBLE_HUE_OFFSETS = [12, 20, 0, 0, 0, 60, 25]
+BALLOON_SCALE = 0.5
+BALLOON_TERMINAL_VELOCITY = 0.075
+BALLOON_DENSITY = 1.
+
+# Camera parameters
+FIELD_OF_VIEW = 45
+ASPECT_RATIO = 640 / 480
+CAM_MIN_DISTANCE = .1
+CAM_MAX_DISTANCE = 10
+CAM_POSITION = (0, 0, 0)
+

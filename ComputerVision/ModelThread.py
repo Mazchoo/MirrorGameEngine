@@ -20,11 +20,11 @@ class ModelThread:
         self.pose_dict = {}
 
     def start(self):
-        Thread(target=self.get, args=()).start()
+        Thread(target=self.run, args=()).start()
         self.model.net.create_context()
         return self
 
-    def get(self):
+    def run(self):
         while not self.stopped:
             if not self.grabbed:
                 self.stop()

@@ -6,6 +6,7 @@ import cv2
 
 
 def read_image_data_from_source(texture_source: Union[str, tuple], hue_offset=0):
+    ''' Read texture source else make an image of size 1 for a single colour '''
     if hue_offset is None:
         hue_offset = 0
     hue_offset = int(hue_offset)

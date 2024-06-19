@@ -13,10 +13,10 @@ class CameraThread:
         self.stopped = False
 
     def start(self):
-        Thread(target=self.get, args=()).start()
+        Thread(target=self.run, args=()).start()
         return self
 
-    def get(self):
+    def run(self):
         while not self.stopped:
             if not self.grabbed:
                 self.stop()

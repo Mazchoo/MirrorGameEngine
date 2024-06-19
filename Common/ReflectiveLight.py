@@ -2,8 +2,8 @@
 import numpy as np
 from OpenGL.GL import (glUniform3fv, glUniform1f)
 
-from Helpers.Globals import (bind_globals_to_object, get_global_object_id,
-                             LIGHT_FREQUENCY , LIGHT_AMPLITUDE, LIGHT_CONSTANT)
+from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
+from Helpers.Globals import LIGHT_FREQUENCY, LIGHT_AMPLITUDE
 
 
 class ReflectiveLight:
@@ -13,6 +13,7 @@ class ReflectiveLight:
         self.position = np.array(position, dtype=np.float32)
         self.color = np.array(color, dtype=np.float32)
         self.strength = float(strength)
+        self.min_strength = float(strength)
         self.ambient_strength = float(ambient_strength)
         self.min_dist = float(min_dist)
         self.max_dist = float(max_dist)
@@ -61,5 +62,6 @@ class ReflectiveLight:
         bind_globals_to_object(self, shader)
     
     def cycle_light_strength(self, frame, shader):
-        self.strength = np.cos(frame * LIGHT_FREQUENCY) * LIGHT_AMPLITUDE + LIGHT_CONSTANT
+        ''' Add a variational offset to the light strength '''
+        self.strength = np.sin(frame * LIGHT_FREQUENCY) * LIGHT_AMPLITUDE + self.min_strength
         self.set_strength_to_global(shader)

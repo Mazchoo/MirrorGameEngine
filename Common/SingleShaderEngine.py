@@ -6,9 +6,7 @@ from Common.ShaderProgram import ShaderProgram
 
 
 class InspectionEngine:
-    '''
-        3D Engine that sets up pygame and compiles a single shader.
-    '''
+    ''' 3D Engine that sets up pygame and compiles a single shader. '''
     def __init__(self, screen_size, background_col, vertex_shader, fragment_shader):
         pg.init()
         pg.display.gl_set_attribute(pg.GL_CONTEXT_MAJOR_VERSION, 3)

@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 def parse_material(line, file_path):
+    ''' Read material line and check it refers to an image e.g. Texture_2.png '''
     material_path = Path(file_path).parent / line
 
     if not material_path.exists():
@@ -14,6 +15,7 @@ def parse_material(line, file_path):
 
 
 def parse_vertex(line):
+    ''' Parse a vertex line e.g. -5.490000 20.340000 4.410002 '''
     vertex = [float(x) for x in line.split(' ')]
 
     if len(vertex) != 3:
@@ -23,6 +25,7 @@ def parse_vertex(line):
 
 
 def get_texture(current_dict):
+    ''' Texture will either be a previously read image or a colour from the diffuse weighting '''
     if texture := current_dict.get('texture'):
         return texture
     if texture := current_dict.get('diffuse_weighting'):
@@ -30,6 +33,7 @@ def get_texture(current_dict):
 
 
 def parse_material_name(current_material, current_dict, mtl_dict):
+    ''' Texture will be a coordinate or an image or an explicit color vt 0.491723 -0.123703 '''
     if current_material:
         current_dict['texture'] = get_texture(current_dict)
 
@@ -40,6 +44,7 @@ def parse_material_name(current_material, current_dict, mtl_dict):
 
 
 def check_mtl_file_exists(obj_path: str) -> str:
+    ''' Get corresponding .mtl for current .obj file '''
     obj_path = Path(obj_path)
     mtl_path = obj_path.parent / (obj_path.stem + '.mtl')
 
@@ -50,6 +55,7 @@ def check_mtl_file_exists(obj_path: str) -> str:
 
 
 def parse_mtl(obj_path: str):
+    ''' Read mtl file into a dictionary '''
     mtl_path = check_mtl_file_exists(obj_path)
 
     current_dict = {}
