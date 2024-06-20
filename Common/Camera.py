@@ -33,10 +33,12 @@ class Camera:
         )
 
     def set_projection_to_global(self, shader: int = None, var_name: str = None):
+        ''' Put projection onto GPU '''
         glob_id = get_global_object_id(self, "object_id", shader, var_name)
         glUniformMatrix4fv(glob_id, 1, GL_FALSE, self.projection_matrix)
 
     def bind_global_variable_names(self, shader):
+        ''' Assign uniforms for current shaders '''
         bind_globals_to_object(self, shader)
 
     def transform_vertex(self, vertex: np.ndarray):

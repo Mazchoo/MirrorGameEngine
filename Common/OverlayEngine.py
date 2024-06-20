@@ -32,19 +32,24 @@ class OverlayEngine:
         self._current_id = 0
 
     def addShader(self, vertex_shader, fragment_shader, setup_callback):
+        ''' Construct a shader program in an shader array '''
         self._shaders.append(ShaderProgram(vertex_shader, fragment_shader, setup_callback))
 
     def useShader(self, i: int):
+        ''' Use shader at certain index '''
         self._shaders[i].use()
 
     def getShaderId(self, i: int):
+        ''' Use shader (identified by the order they are stored) '''
         return self._shaders[i].id
 
     def __call__(self, i: int):
+        ''' Set shader id '''
         self._current_id = i
         return self
 
     def __enter__(self):
+        ''' Allows calling with engine(1): to set shader for context. '''
         self.useShader(self._current_id)
         return self.getShaderId(self._current_id)
 

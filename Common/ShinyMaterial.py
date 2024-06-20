@@ -44,7 +44,6 @@ class ShinyMaterial:
     '''
 
     def __init__(self, hue_offset, **kwargs):
-        # ToDo : Consider making a class with a struct for global variables
         self.ambient_weighting = get_value_or_default(kwargs, 'ambient_weighting', DEFAULT_AMBIENT_WEIGHTING)
         self.diffuse_weighting = get_value_or_default(kwargs, 'diffuse_weighting', DEFAULT_DIFFUSE_WEIGHTING)
         self.specular_weighting = get_value_or_default(kwargs, 'specular_weighting', DEFAULT_SPECULAR_WEIGHTING)
@@ -74,11 +73,13 @@ class ShinyMaterial:
         self.global_check_passed = False
 
     def assign_global_slots(self, shader, **kwargs):
+        ''' Get global variable ids for each variable '''
         for global_id_name in GLOBAL_ID_NAMES:
             if global_name := get_value_or_default(kwargs, global_id_name, None):
                 self.__setattr__(global_id_name, glGetUniformLocation(shader, global_name))
 
     def set_material_to_global(self):
+        ''' Check global ids have been set (assumes shader is the same) '''
         if not self.global_check_passed:
             for global_id_name in GLOBAL_ID_NAMES:
                 if self.__getattribute__(global_id_name) is None:

@@ -72,5 +72,6 @@ class EulerMotion:
         bind_globals_to_object(self, shader)
 
     def transform_vertex(self, vertex: np.ndarray) -> np.ndarray:
+        ''' Transform 4d vertex object's position in 4d '''
         result = vertex @ self._position_matrix
         return result

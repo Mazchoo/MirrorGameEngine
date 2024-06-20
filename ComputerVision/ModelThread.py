@@ -7,10 +7,10 @@ from PoseEstimation.model_params import TRT_PATH
 from PoseEstimation.tensor_rt import TensorRTModel
 
 class ModelThread:
-    """
-    Class that continuously gets frames from a VideoCapture object
-    with a dedicated thread.
-    """
+    '''
+        Class that continuously gets frames from a VideoCapture object
+        with a dedicated thread.
+    '''
 
     def __init__(self, src=0):
         self.stream = cv2.VideoCapture(src)

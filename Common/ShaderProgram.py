@@ -21,12 +21,14 @@ class ShaderProgram:
 
     @staticmethod
     def readShaderFile(path: str):
+        ''' Make vertex and fragment shader programs into one program. '''
         with open(path, 'r') as f:
             source = f.readlines()
         return source
 
     @staticmethod
     def createShader(vertex_file_path, fragment_file_path):
+        ''' Make vertex and fragment shader programs into one program. '''
         vertex_source = ShaderProgram.readShaderFile(vertex_file_path)
         fragment_source = ShaderProgram.readShaderFile(fragment_file_path)
 

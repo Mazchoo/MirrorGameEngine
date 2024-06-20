@@ -14,11 +14,9 @@ from Helpers.VertexDataOperations import (normalize_l1, get_bbox_2d,
 from Helpers.MemoryUtil import generate_vertex_buffers, layout_position_texture_normal
 from Helpers.Globals import IMAGE_SIZE
 
-IMAGE_SIZE = np.array(IMAGE_SIZE, dtype=np.float32)
-
 
 class ObjMtlMesh:
-
+    image_size = np.array(IMAGE_SIZE, dtype=np.float32)
     __slots__ = 'centroid', 'bbox', 'vao', 'vbo', 'texture_data', 'materials', \
                 'draw_iterator', 'motion', 'globals', 'volume', 'screen_bbox', 'screen_centroid'
 
@@ -63,10 +61,8 @@ class ObjMtlMesh:
         self.screen_bbox = np.zeros((4, 2), dtype=np.int32) # Actual coordinates
         self.screen_centroid = np.zeros(2, dtype=np.int32)
 
-    def update(self):
-        pass
-
     def draw(self):
+        ''' Draw object with materials '''
         glBindVertexArray(self.vao)
         self.motion.set_motion_to_global()
 
@@ -74,29 +70,24 @@ class ObjMtlMesh:
             material.use()
             glDrawArrays(GL_TRIANGLES, offset, count)
 
-    def destroy(self):
-        # Free memory of buffers
-        for material in self.materials:
-            material.destroy()
-
-        glDeleteVertexArrays(1, (self.vao, ))
-        glDeleteBuffers(1, (self.vbo, ))
-
     def bind_global_variable_names(self, shader):
+        ''' Prepare object for drawing '''
         for material in self.materials:
             material.assign_global_slots(shader, **self.globals)
         self.motion.bind_global_variable_names(shader)
 
     def transform_vertex_to_screen(self, vertex: np.ndarray, player: Player):
+        ''' Turn vertex from static 4d sobject plane to 2d screen coordinates. '''
         vertex = self.motion.transform_vertex(vertex)
         vertex = player.transform_vertex(vertex)
         vertex /= vertex[3]
         vertex = vertex[:2] * -1
         vertex = vertex * 0.5 + 0.5
-        vertex *= IMAGE_SIZE
+        vertex *= self.image_size
         return vertex
 
     def update_bbox_and_centroid(self, player: Player):
+        ''' Updated bounding box and centroid screen coordinates '''
         v_min, v_max = self.bbox
         v_min = self.transform_vertex_to_screen(v_min, player)
         v_max = self.transform_vertex_to_screen(v_max, player)
@@ -120,5 +111,10 @@ class ObjMtlMesh:
         self.screen_bbox = bbox.astype(np.int32)
         self.screen_centroid = centroid.astype(np.int32)
 
-    def check_collision(self, pose: dict):
-        pass
+    def destroy(self):
+        # Free memory of buffers
+        for material in self.materials:
+            material.destroy()
+
+        glDeleteVertexArrays(1, (self.vao, ))
+        glDeleteBuffers(1, (self.vbo, ))

@@ -4,7 +4,7 @@ from App.SetupGameLoop import setup_app
 
 
 def update(app):
-    ''' Update the game logic of the app every frame. '''
+    ''' Update the game state of the app every frame. '''
     app.engine.useShader(0)
     app.light.cycle_light_strength(app.total_frames, 0)
 

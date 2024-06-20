@@ -87,6 +87,7 @@ class Player:
         self.camera.bind_global_variable_names(shader)
 
     def transform_vertex(self, vertex: np.ndarray):
+        ''' Transforms vertex in real plane to camera canvas plane '''
         result = vertex @ self._view_matrix
         return self.camera.transform_vertex(result)
 

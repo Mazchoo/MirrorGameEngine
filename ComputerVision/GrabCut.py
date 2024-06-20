@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
     while True:
         start = perf_counter()
-        pred_frame = draw_body_mask(capture.frame, capture.poses)
+        pred_frame = draw_body_mask(capture.frame, capture.model.poses)
         total_time += perf_counter() - start
         total_measurements += 1
 
