@@ -1,7 +1,7 @@
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
-from IPython.display import HTML, display
+from IPython.display import HTML
 
 
 def show_syntax_highlighted_file(path, lexer_name='glsl', line_range=None):
@@ -12,7 +12,7 @@ def show_syntax_highlighted_file(path, lexer_name='glsl', line_range=None):
     if line_range is not None:
         start, end = line_range
         contents = '\n'.join(contents.split('\n')[start:end])
-    
+
     lexer = get_lexer_by_name(lexer_name)
     formatter = HtmlFormatter(style='colorful')
     highlighted_code = highlight(contents, lexer, formatter)
