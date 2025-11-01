@@ -1,4 +1,3 @@
-
 import pyrr
 import numpy as np
 from OpenGL.GL import glUniformMatrix4fv
@@ -8,11 +7,17 @@ from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
 
 
 class EulerMotion:
-    __slots__ = 'angles', 'position', '_angle_matrix', '_position_matrix', \
-                'object_id', 'motion_matrix', "globals"
+    __slots__ = (
+        "angles",
+        "position",
+        "_angle_matrix",
+        "_position_matrix",
+        "object_id",
+        "motion_matrix",
+        "globals",
+    )
 
     def __init__(self, position: list, angles: list, **kwargs):
-
         self.object_id = None
         self.globals = kwargs
 
@@ -21,7 +26,9 @@ class EulerMotion:
         self.angles = angles
 
         if len(position) != 3:
-            raise ValueError(f"Expecting thee cordinates for position, found {len(position)}")
+            raise ValueError(
+                f"Expecting thee cordinates for position, found {len(position)}"
+            )
         self.position = np.array(position, dtype=np.float32)
 
         self._angle_matrix = np.identity(4, dtype=np.float32)
@@ -57,8 +64,7 @@ class EulerMotion:
 
         if angles:
             self._angle_matrix = pyrr.matrix44.create_from_eulers(
-                eulers=self.angles,
-                dtype=np.float32
+                eulers=self.angles, dtype=np.float32
             )
 
         self.motion_matrix = self._angle_matrix @ self._position_matrix
@@ -72,6 +78,6 @@ class EulerMotion:
         bind_globals_to_object(self, shader)
 
     def transform_vertex(self, vertex: np.ndarray) -> np.ndarray:
-        ''' Transform 4d vertex object's position in 4d '''
+        """Transform 4d vertex object's position in 4d"""
         result = vertex @ self._position_matrix
         return result

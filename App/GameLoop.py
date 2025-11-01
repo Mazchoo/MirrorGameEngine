@@ -1,9 +1,13 @@
 from typing import Callable
 
 import pygame as pg
-from OpenGL.GL import (glClear, glDisable, glEnable)
-from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST,
-                       GL_CULL_FACE)
+from OpenGL.GL import glClear, glDisable, glEnable
+from OpenGL.GL import (
+    GL_COLOR_BUFFER_BIT,
+    GL_DEPTH_BUFFER_BIT,
+    GL_DEPTH_TEST,
+    GL_CULL_FACE,
+)
 
 from Common.OverlayEngine import OverlayEngine
 from Helpers.SoundPlayer import SoundPlayer
@@ -19,12 +23,24 @@ def create_all_balloons(shape_factory: Callable, n: int) -> list:
         balloons.append(balloon)
     return balloons
 
+
 class GameLoop:
-
-    def __init__(self, shape_factory, shape_args, overlay_factory, overlay_args, player, light,
-                 capture, background_col=(.1, .2, .2, 1.), screen_size=(640, 480), nr_balloons=10,
-                 limit_frame_rate=True, main_loop_command=lambda x: x, draw3d=True):
-
+    def __init__(
+        self,
+        shape_factory,
+        shape_args,
+        overlay_factory,
+        overlay_args,
+        player,
+        light,
+        capture,
+        background_col=(0.1, 0.2, 0.2, 1.0),
+        screen_size=(640, 480),
+        nr_balloons=10,
+        limit_frame_rate=True,
+        main_loop_command=lambda x: x,
+        draw3d=True,
+    ):
         self.engine = OverlayEngine(screen_size, background_col)
         self.engine.addShader(*shape_args)
         self.engine.addShader(*overlay_args)
@@ -40,7 +56,7 @@ class GameLoop:
 
             self.light.bind_global_variable_names(shape_shader_id)
             for balloon in self.balloons:
-                balloon.bind_global_variable_names(shape_shader_id) 
+                balloon.bind_global_variable_names(shape_shader_id)
             self.player.bind_global_variable_names(shape_shader_id)
 
         with self.engine(1):
@@ -55,7 +71,7 @@ class GameLoop:
         self.last_time = pg.time.get_ticks()
         self.total_frames = 0
         self.frame_freq = 0
-        self.frame_time = 1.
+        self.frame_time = 1.0
 
         self.screen_width, self.screen_height = screen_size
         self.center_screen = (self.screen_width // 2, self.screen_height // 2)
@@ -100,10 +116,10 @@ class GameLoop:
         delta = self.current_time - self.last_time
 
         if delta >= 1000:
-            frame_rate = max(1, int(1000. * self.frame_freq / delta))
-            pg.display.set_caption(f'Running at {frame_rate} fps')
+            frame_rate = max(1, int(1000.0 * self.frame_freq / delta))
+            pg.display.set_caption(f"Running at {frame_rate} fps")
             self.last_time = self.current_time
-            self.frame_time = 1000. / max(1., frame_rate)
+            self.frame_time = 1000.0 / max(1.0, frame_rate)
             self.frame_freq = 0
 
         self.frame_freq += 1

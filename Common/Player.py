@@ -1,4 +1,3 @@
-
 import numpy as np
 import pyrr
 from OpenGL.GL import glUniformMatrix4fv
@@ -10,8 +9,17 @@ from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
 
 class Player:
     global_up = np.array([0, 0, 1], dtype=np.float32)
-    __slots__ = 'position', 'theta', 'phi', '_position_matrix', '_angle_matrix', \
-                '_view_matrix', 'camera', 'object_id', 'globals'
+    __slots__ = (
+        "position",
+        "theta",
+        "phi",
+        "_position_matrix",
+        "_angle_matrix",
+        "_view_matrix",
+        "camera",
+        "object_id",
+        "globals",
+    )
 
     def __init__(self, camera: Camera, theta=0, phi=0, position=(0, 0, 0), **kwargs):
         self.camera = camera
@@ -23,7 +31,9 @@ class Player:
         self.globals = kwargs
 
         if len(position) != 3:
-            raise ValueError(f"Expecting thee cordinates for position, found {len(position)}")
+            raise ValueError(
+                f"Expecting thee cordinates for position, found {len(position)}"
+            )
         self.position = np.array(position, dtype=np.float32)
 
         self._position_matrix = np.identity(4, dtype=np.float32)
@@ -72,8 +82,7 @@ class Player:
 
         if theta or phi:
             self._angle_matrix = pyrr.matrix44.create_from_eulers(
-                eulers=[self.phi, 0, self.theta],
-                dtype=np.float32
+                eulers=[self.phi, 0, self.theta], dtype=np.float32
             )
 
         self._view_matrix = self._position_matrix @ self._angle_matrix
@@ -87,7 +96,6 @@ class Player:
         self.camera.bind_global_variable_names(shader)
 
     def transform_vertex(self, vertex: np.ndarray):
-        ''' Transforms vertex in real plane to camera canvas plane '''
+        """Transforms vertex in real plane to camera canvas plane"""
         result = vertex @ self._view_matrix
         return self.camera.transform_vertex(result)
-

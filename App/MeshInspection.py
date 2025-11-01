@@ -1,8 +1,12 @@
-
 import pygame as pg
-from OpenGL.GL import (glClear, glUseProgram, glDeleteProgram, glEnable, glBlendFunc)
-from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT,
-                       GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+from OpenGL.GL import glClear, glUseProgram, glDeleteProgram, glEnable, glBlendFunc
+from OpenGL.GL import (
+    GL_COLOR_BUFFER_BIT,
+    GL_DEPTH_BUFFER_BIT,
+    GL_BLEND,
+    GL_SRC_ALPHA,
+    GL_ONE_MINUS_SRC_ALPHA,
+)
 import numpy as np
 
 from Helpers.KeyUtil import get_directional_key_combination
@@ -10,12 +14,21 @@ from Common.SingleShaderEngine import InspectionEngine
 
 
 class InspectionApp:
-
-    def __init__(self, shape_factory, vertex_shader, fragment_shader, player, light,
-                 background_col=(.1, .2, .2, 1.), screen_size=(640, 480), limit_frame_rate=True,
-                 main_loop_command=lambda x: x):
-
-        self.engine = InspectionEngine(screen_size, background_col, vertex_shader, fragment_shader)
+    def __init__(
+        self,
+        shape_factory,
+        vertex_shader,
+        fragment_shader,
+        player,
+        light,
+        background_col=(0.1, 0.2, 0.2, 1.0),
+        screen_size=(640, 480),
+        limit_frame_rate=True,
+        main_loop_command=lambda x: x,
+    ):
+        self.engine = InspectionEngine(
+            screen_size, background_col, vertex_shader, fragment_shader
+        )
 
         self.light = light
         self.shape = shape_factory()
@@ -36,7 +49,7 @@ class InspectionApp:
         self.limit_frame_rate = limit_frame_rate
         self.last_time = pg.time.get_ticks()
         self.frame_freq = 0
-        self.frame_time = 1.
+        self.frame_time = 1.0
 
         self.screen_width, self.screen_height = screen_size
         self.center_screen = (self.screen_width // 2, self.screen_height // 2)
@@ -44,24 +57,30 @@ class InspectionApp:
         self.main_loop(main_loop_command)
 
     def handle_keys(self):
-        direction_modifier, up, down = get_directional_key_combination(pg.key.get_pressed())
+        direction_modifier, up, down = get_directional_key_combination(
+            pg.key.get_pressed()
+        )
         dir_movement = direction_modifier is not None
 
         if dir_movement or up or down:
-            delta_x = np.sin(self.player.theta + direction_modifier) if dir_movement else 0.
-            delta_z = np.cos(self.player.theta + direction_modifier) if dir_movement else 0.
+            delta_x = (
+                np.sin(self.player.theta + direction_modifier) if dir_movement else 0.0
+            )
+            delta_z = (
+                np.cos(self.player.theta + direction_modifier) if dir_movement else 0.0
+            )
 
             if up:
-                delta_y = -1.
+                delta_y = -1.0
             elif down:
-                delta_y = 1.
+                delta_y = 1.0
             else:
-                delta_y = 0.
-        
+                delta_y = 0.0
+
             delta_postion = [
                 self.frame_time * 0.0025 * delta_x,
                 self.frame_time * 0.0025 * delta_y,
-                self.frame_time * 0.0025 * delta_z
+                self.frame_time * 0.0025 * delta_z,
             ]
 
             self.player.increment_position(*delta_postion)
@@ -69,7 +88,6 @@ class InspectionApp:
             self.player.set_view_to_global()
 
     def handle_mouse(self):
-
         (x, y) = pg.mouse.get_pos()
         theta_increment = self.frame_time * 0.00020 * (self.center_screen[0] - x)
         phi_increment = self.frame_time * 0.00015 * (self.center_screen[1] - y)
@@ -108,10 +126,10 @@ class InspectionApp:
         self.current_time = pg.time.get_ticks()
         delta = self.current_time - self.last_time
         if delta >= 1000:
-            frame_rate = max(1, int(1000. * self.frame_freq / delta))
-            pg.display.set_caption(f'Running at {frame_rate} fps')
+            frame_rate = max(1, int(1000.0 * self.frame_freq / delta))
+            pg.display.set_caption(f"Running at {frame_rate} fps")
             self.last_time = self.current_time
-            self.frame_time = 1000. / max(1., frame_rate)
+            self.frame_time = 1000.0 / max(1.0, frame_rate)
             self.frame_freq = 0
 
         self.frame_freq += 1

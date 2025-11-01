@@ -4,7 +4,7 @@ from App.SetupGameLoop import setup_app
 
 
 def update(app):
-    ''' Update the game state of the app every frame. '''
+    """Update the game state of the app every frame."""
     app.engine.useShader(0)
     app.light.cycle_light_strength(app.total_frames, 0)
 
@@ -26,7 +26,7 @@ def update(app):
 
     for balloon in app.balloons:
         if balloon.despawn:
-            app.sound_player.play_sound('balloon-pop.wav')
+            app.sound_player.play_sound("balloon-pop.wav")
             balloon.respawn()
             balloon.update_bbox_and_centroid(app.player)
 
@@ -34,5 +34,5 @@ def update(app):
         app.overlay.setTexture(frame)
 
 
-if __name__ == '__main__':
-    setup_app('./ObjFiles/Balloon/Balloon.obj', update)
+if __name__ == "__main__":
+    setup_app("./ObjFiles/Balloon/Balloon.obj", update)

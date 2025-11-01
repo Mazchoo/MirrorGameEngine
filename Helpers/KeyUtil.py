@@ -1,4 +1,3 @@
-
 import numpy as np
 import pygame as pg
 
@@ -39,7 +38,7 @@ def get_directional_key_combination(keys):
 
     if key_combination > 0:
         if key_combination == 1:
-            return 0., up, down
+            return 0.0, up, down
         elif key_combination == 3:
             return np.pi * 0.25, up, down
         elif key_combination == 2 or key_combination == 7:

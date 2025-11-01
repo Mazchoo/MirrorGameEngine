@@ -1,4 +1,3 @@
-
 from time import perf_counter
 
 import cv2
@@ -18,8 +17,8 @@ def draw_center_of_light(image: np.ndarray):
         grey_image /= total_grey
 
     height, width = grey_image.shape
-    x_mesh, y_mesh = np.meshgrid(np.arange(
-        width, dtype=np.float32), np.arange(height, dtype=np.float32)
+    x_mesh, y_mesh = np.meshgrid(
+        np.arange(width, dtype=np.float32), np.arange(height, dtype=np.float32)
     )
     x = round((x_mesh * grey_image).sum())
     y = round((y_mesh * grey_image).sum())
@@ -41,8 +40,7 @@ def draw_largest_blob(image: np.ndarray):
     return image
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     capture = CameraThread(0)
     capture.start()
     cv2.namedWindow("Center of Light")
@@ -59,7 +57,7 @@ if __name__ == '__main__':
         if total_measurements != 0:
             avg_time_ms = np.round(1000 * total_time / total_measurements, 3)
             avg_fps = 1000 / avg_time_ms
-            print(f'Avg time {total_time/total_measurements} fps {avg_fps}')
+            print(f"Avg time {total_time / total_measurements} fps {avg_fps}")
 
         cv2.imshow("Center of Light", pred_frame)
 

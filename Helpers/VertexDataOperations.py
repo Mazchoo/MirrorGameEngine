@@ -1,16 +1,15 @@
-
 import numpy as np
 
 
 def normalize_l1(vertices: np.ndarray, factor=2):
-    ''' Scale all vertices down by maximum value. '''
+    """Scale all vertices down by maximum value."""
     max_norm = np.abs(vertices).max()
     max_norm /= factor
     vertices /= max_norm
 
 
 def get_bbox_2d(vertices: np.ndarray):
-    ''' Get bounding box of vertices (min and max homogenous 4d coodinate) '''
+    """Get bounding box of vertices (min and max homogenous 4d coodinate)"""
     v_mins = np.concatenate([vertices[:, :3].min(axis=0), [1]])
     v_maxs = np.concatenate([vertices[:, :3].max(axis=0), [1]])
     bbox = np.vstack([v_mins, v_maxs])
@@ -34,7 +33,7 @@ def centroid_weighted_by_face(vertices: np.ndarray):
 
 
 def convex_volume(vertices: np.ndarray):
-    ''' Assumes centroid is at (0, 0, 0) '''
+    """Assumes centroid is at (0, 0, 0)"""
     if len(vertices) < 3 or len(vertices) % 3 != 0:
         raise ValueError("Calculating centroid of array without faces")
 
@@ -45,4 +44,3 @@ def convex_volume(vertices: np.ndarray):
     concat_vertices = concat_vertices.reshape(len(vertices) // 3, 3, 3)
     determinants = np.linalg.det(concat_vertices)
     return determinants.sum() / 6
-

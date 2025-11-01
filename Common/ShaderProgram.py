@@ -1,4 +1,3 @@
-
 from typing import Callable
 
 from OpenGL.GL.shaders import compileProgram, compileShader
@@ -7,8 +6,9 @@ from OpenGL.GL import GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
 
 
 class ShaderProgram:
-
-    def __init__(self, vertex_file_path: str, fragment_file_path: str, setup_callback: Callable):
+    def __init__(
+        self, vertex_file_path: str, fragment_file_path: str, setup_callback: Callable
+    ):
         self.id = ShaderProgram.createShader(vertex_file_path, fragment_file_path)
         glUseProgram(self.id)
         setup_callback(self.id)
@@ -21,18 +21,18 @@ class ShaderProgram:
 
     @staticmethod
     def readShaderFile(path: str):
-        ''' Make vertex and fragment shader programs into one program. '''
-        with open(path, 'r') as f:
+        """Make vertex and fragment shader programs into one program."""
+        with open(path, "r") as f:
             source = f.readlines()
         return source
 
     @staticmethod
     def createShader(vertex_file_path, fragment_file_path):
-        ''' Make vertex and fragment shader programs into one program. '''
+        """Make vertex and fragment shader programs into one program."""
         vertex_source = ShaderProgram.readShaderFile(vertex_file_path)
         fragment_source = ShaderProgram.readShaderFile(fragment_file_path)
 
         return compileProgram(
             compileShader(vertex_source, GL_VERTEX_SHADER),
-            compileShader(fragment_source, GL_FRAGMENT_SHADER)
+            compileShader(fragment_source, GL_FRAGMENT_SHADER),
         )

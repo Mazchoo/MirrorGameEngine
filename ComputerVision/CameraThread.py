@@ -1,11 +1,12 @@
 from threading import Thread
 import cv2
 
+
 class CameraThread:
-    '''
-        Class that continuously gets frames from a VideoCapture object
-        with a dedicated thread.
-    '''
+    """
+    Class that continuously gets frames from a VideoCapture object
+    with a dedicated thread.
+    """
 
     def __init__(self, src=0):
         self.stream = cv2.VideoCapture(src)

@@ -1,15 +1,21 @@
-
 import numpy as np
-from OpenGL.GL import (glUniform3fv, glUniform1f)
+from OpenGL.GL import glUniform3fv, glUniform1f
 
 from Helpers.GlobalVarUtil import bind_globals_to_object, get_global_object_id
 from Helpers.Globals import LIGHT_FREQUENCY, LIGHT_AMPLITUDE
 
 
 class ReflectiveLight:
-    def __init__(self, position: list, color: list, strength: float,
-                 ambient_strength: float, min_dist: float, max_dist: float, **kwargs):
-
+    def __init__(
+        self,
+        position: list,
+        color: list,
+        strength: float,
+        ambient_strength: float,
+        min_dist: float,
+        max_dist: float,
+        **kwargs,
+    ):
         self.position = np.array(position, dtype=np.float32)
         self.color = np.array(color, dtype=np.float32)
         self.strength = float(strength)
@@ -39,7 +45,9 @@ class ReflectiveLight:
         glUniform1f(glob_id, self.strength)
 
     def set_ambient_strength_to_global(self, shader: int = None, var_name: str = None):
-        glob_id = get_global_object_id(self, "ambient_strength_glob_id", shader, var_name)
+        glob_id = get_global_object_id(
+            self, "ambient_strength_glob_id", shader, var_name
+        )
         glUniform1f(glob_id, self.ambient_strength)
 
     def set_min_dist_to_global(self, shader: int = None, var_name: str = None):
@@ -60,8 +68,10 @@ class ReflectiveLight:
 
     def bind_global_variable_names(self, shader):
         bind_globals_to_object(self, shader)
-    
+
     def cycle_light_strength(self, frame, shader):
-        ''' Add a variational offset to the light strength '''
-        self.strength = np.sin(frame * LIGHT_FREQUENCY) * LIGHT_AMPLITUDE + self.min_strength
+        """Add a variational offset to the light strength"""
+        self.strength = (
+            np.sin(frame * LIGHT_FREQUENCY) * LIGHT_AMPLITUDE + self.min_strength
+        )
         self.set_strength_to_global(shader)

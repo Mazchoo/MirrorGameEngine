@@ -6,7 +6,7 @@ import cv2
 
 
 def read_image_data_from_source(texture_source: Union[str, tuple], hue_offset=0):
-    ''' Read texture source else make an image of size 1 for a single colour '''
+    """Read texture source else make an image of size 1 for a single colour"""
     if hue_offset is None:
         hue_offset = 0
     hue_offset = int(hue_offset)
@@ -21,7 +21,7 @@ def read_image_data_from_source(texture_source: Union[str, tuple], hue_offset=0)
         texture_array = np.array([[texture_source]], dtype=np.float32)
 
     else:
-        raise ValueError('Invalid texture source')
+        raise ValueError("Invalid texture source")
 
     image = pg.surfarray.make_surface(texture_array)
     width, height = image.get_rect().size
@@ -29,8 +29,8 @@ def read_image_data_from_source(texture_source: Union[str, tuple], hue_offset=0)
 
 
 def draw_balloon_bounding_boxes(balloons: list, frame: np.ndarray):
-    ''' Draw all bounding boxes on a copy of screen frame. '''
-    frame = frame.copy() 
+    """Draw all bounding boxes on a copy of screen frame."""
+    frame = frame.copy()
     for balloon in balloons:
         cog = balloon.screen_centroid
         bbox = balloon.screen_bbox

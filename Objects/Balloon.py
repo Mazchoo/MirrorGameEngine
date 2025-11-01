@@ -4,19 +4,46 @@ import numpy as np
 
 from Common.ObjMtlMesh import ObjMtlMesh
 from Common.EulerMotion import EulerMotion
-from Helpers.Globals import (GRAVITY_CONSTANT, IMAGE_SIZE, CEILING_LEVEL, DESPAWN_LEVEL,
-                             WALL_MOMENTUM_DROP, CEILING_MOMENTUM_DROP, FRAME_YZ_SPEED_DROP,
-                             FRAME_XY_DISTURBANCE_RATIO, FRAME_XZ_SPEED_DROP)
+from Helpers.Globals import (
+    GRAVITY_CONSTANT,
+    IMAGE_SIZE,
+    CEILING_LEVEL,
+    DESPAWN_LEVEL,
+    WALL_MOMENTUM_DROP,
+    CEILING_MOMENTUM_DROP,
+    FRAME_YZ_SPEED_DROP,
+    FRAME_XY_DISTURBANCE_RATIO,
+    FRAME_XZ_SPEED_DROP,
+)
+
 
 class Balloon(ObjMtlMesh):
+    __slots__ = (
+        "terminal_velocity",
+        "velocity",
+        "angular_velocity",
+        "density",
+        "responsive",
+        "running",
+        "response_count",
+        "despawn",
+        "spawn_time",
+        "spawn_count",
+        "initial_position",
+        "initial_angles",
+    )
 
-    __slots__ = 'terminal_velocity', 'velocity', 'angular_velocity', 'density', 'responsive',\
-                'running', 'response_count', 'despawn', 'spawn_time', \
-                'spawn_count', 'initial_position', 'initial_angles'
-
-    def __init__(self, file_path: str, motion: EulerMotion,
-                 normalize_scale: float, color_variation: dict,
-                 terminal_velocity: float, density: float, spawn_time: int, **kwargs):
+    def __init__(
+        self,
+        file_path: str,
+        motion: EulerMotion,
+        normalize_scale: float,
+        color_variation: dict,
+        terminal_velocity: float,
+        density: float,
+        spawn_time: int,
+        **kwargs,
+    ):
         super().__init__(file_path, motion, normalize_scale, color_variation, **kwargs)
 
         # Velocities
@@ -89,21 +116,21 @@ class Balloon(ObjMtlMesh):
             return False
 
         mass = self.density * self.volume
-        body_part_mass = 3 #  ToDo - trying varying this
+        body_part_mass = 3  #  ToDo - trying varying this
         min_x, min_y = self.screen_bbox[0]
         max_x, max_y = self.screen_bbox[2]
 
         for key, body_part_data in pose.items():
-            x, y = body_part_data['position']
+            x, y = body_part_data["position"]
             if x > min_x and x < max_x and y > min_y and y < max_y:
-                collision_v = -1 * body_part_data['velocity']
+                collision_v = -1 * body_part_data["velocity"]
                 collision_v[1] = max(collision_v[1], 0)
 
                 if np.linalg.norm(collision_v) < 1e-7:
                     continue
 
-                velocity = (mass * self.velocity[:2] + body_part_mass * collision_v)
-                velocity /= (mass + body_part_mass)
+                velocity = mass * self.velocity[:2] + body_part_mass * collision_v
+                velocity /= mass + body_part_mass
                 self.velocity[:2] = velocity
 
                 self.angular_velocity[0] += 0.05
@@ -128,7 +155,6 @@ class Balloon(ObjMtlMesh):
         max_x, max_y = balloon.screen_bbox[2]
 
         for other in balloons[1:]:
-
             other_mass = other.density * other.volume
             other_min_x, other_min_y = other.screen_bbox[0]
             other_max_x, other_max_y = other.screen_bbox[2]
@@ -139,8 +165,8 @@ class Balloon(ObjMtlMesh):
             if min_y > other_max_y or other_min_y > max_y:
                 continue
 
-            speed = (mass * balloon.velocity[0] + other_mass * other.velocity[0])
-            speed /= (mass + other_mass)
+            speed = mass * balloon.velocity[0] + other_mass * other.velocity[0]
+            speed /= mass + other_mass
             speed = max(speed, 0.01)
 
             if balloon.screen_centroid[0] < other.screen_centroid[0]:

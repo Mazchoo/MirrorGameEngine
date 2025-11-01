@@ -1,7 +1,7 @@
 import numpy as np
 import tensorrt as trt
 import pycuda.driver as cuda
-import pycuda.autoinit # Does some initialisation
+import pycuda.autoinit  # Does some initialisation
 
 from PoseEstimation.run import main
 from PoseEstimation.model_params import TRT_PATH
@@ -11,7 +11,7 @@ class TensorRTModel:
     def __init__(self, path: str, **kwargs):
         self.trt_logger = trt.Logger(trt.Logger.WARNING)
         self.runtime = trt.Runtime(self.trt_logger)
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             engine_data = f.read()
         self.engine = self.runtime.deserialize_cuda_engine(engine_data)
 
@@ -26,30 +26,48 @@ class TensorRTModel:
             cuda_mem = cuda.mem_alloc(host_mem.nbytes)
             self.bindings.append(int(cuda_mem))
 
-            if binding == 'data':
-                self.inputs.append({'host': host_mem, 'device': cuda_mem,
-                                    'shape': shape, 'name': binding})
+            if binding == "data":
+                self.inputs.append(
+                    {
+                        "host": host_mem,
+                        "device": cuda_mem,
+                        "shape": shape,
+                        "name": binding,
+                    }
+                )
             else:
-                self.outputs.append({'host': host_mem, 'device': cuda_mem,
-                                     'shape': shape, 'name': binding})
+                self.outputs.append(
+                    {
+                        "host": host_mem,
+                        "device": cuda_mem,
+                        "shape": shape,
+                        "name": binding,
+                    }
+                )
 
-        self.success = None # Don't know yet if model run was successful
+        self.success = None  # Don't know yet if model run was successful
         self.context = None
 
     def create_context(self):
-        self.context = self.engine.create_execution_context() 
+        self.context = self.engine.create_execution_context()
 
     def __call__(self, inp: np.ndarray):
         cuda.Context.push(pycuda.autoinit.context)
-        np.copyto(self.inputs[0]['host'], inp)
-        cuda.memcpy_htod_async(self.inputs[0]['device'], self.inputs[0]['host'], self.stream)
+        np.copyto(self.inputs[0]["host"], inp)
+        cuda.memcpy_htod_async(
+            self.inputs[0]["device"], self.inputs[0]["host"], self.stream
+        )
         self.success = self.context.execute_v2(self.bindings)
-        cuda.memcpy_dtoh_async(self.outputs[2]['host'], self.outputs[2]['device'], self.stream)
-        cuda.memcpy_dtoh_async(self.outputs[3]['host'], self.outputs[3]['device'], self.stream)
+        cuda.memcpy_dtoh_async(
+            self.outputs[2]["host"], self.outputs[2]["device"], self.stream
+        )
+        cuda.memcpy_dtoh_async(
+            self.outputs[3]["host"], self.outputs[3]["device"], self.stream
+        )
         self.stream.synchronize()
         cuda.Context.pop()
-        return self.outputs[2]['host'], self.outputs[3]['host']
+        return self.outputs[2]["host"], self.outputs[3]["host"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(TensorRTModel(TRT_PATH), load_cuda=False)

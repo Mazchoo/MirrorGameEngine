@@ -1,5 +1,4 @@
-
 from App.SetupMeshInspection import mesh_view
 
-if __name__ == '__main__':
-    mesh_view('./ObjFiles/Bulbasaur/Bulbasaur.obj', './Shaders/specular.frag', 30.)
+if __name__ == "__main__":
+    mesh_view("./ObjFiles/Bulbasaur/Bulbasaur.obj", "./Shaders/specular.frag", 30.0)
