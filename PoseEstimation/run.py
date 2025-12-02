@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 import torch
 
-from ComputerVision.CameraThread import CameraThread
 from PoseEstimation.mobilenet import PoseEstimationWithMobileNet
 from PoseEstimation.keypoints import extract_keypoints, group_keypoints
 from PoseEstimation.load_state import load_state
@@ -221,28 +220,30 @@ class CheckPointMobileNet:
 
 
 def main(network, **kwargs):
-    capture = CameraThread().start()
+    capture = cv2.VideoCapture(0)
     model = CheckPointMobileNet(network, **kwargs)
     cv2.namedWindow("Camera")
 
     total_time = 0
     total_measurements = 0
     while True:
-        start = perf_counter()
-        pred_frame = model(capture.frame)
-        total_time += perf_counter() - start
-        total_measurements += 1
+        _, pred_frame = capture.read()
+        if pred_frame is not None:
+            start = perf_counter()
+            pred_frame = model(pred_frame)
+            total_time += perf_counter() - start
+            total_measurements += 1
 
-        if total_measurements != 0:
-            avg_time_ms = np.round(1000 * total_time / total_measurements, 3)
-            avg_fps = 1000 / avg_time_ms
-            print(f"Avg time {total_time / total_measurements} fps {avg_fps}")
+            if total_measurements != 0:
+                avg_time_ms = np.round(1000 * total_time / total_measurements, 3)
+                avg_fps = 1000 / avg_time_ms
+                print(f"Avg time {total_time / total_measurements} fps {avg_fps}")
 
-        cv2.imshow("Camera", pred_frame)
+            cv2.imshow("Camera", pred_frame)
 
-        k = cv2.waitKey(1)
-        if k % 256 == 27:
-            break
+            k = cv2.waitKey(1)
+            if k % 256 == 27:
+                break
 
     capture.stop()
 
